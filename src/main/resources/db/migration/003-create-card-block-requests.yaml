@@ -1,0 +1,103 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-card-block-requests
+      author: CarlStein1
+
+      changes:
+        - createTable:
+            tableName: card_block_requests
+            columns:
+              - column:
+                  name: id_block_request
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_card_block_requests
+                    nullable: false
+
+              - column:
+                  name: card_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: request_status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: reason
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: true
+
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: processed_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+
+              - column:
+                  name: processed_by
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+
+              - column:
+                  name: admin_comment
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: true
+
+        - createIndex:
+            tableName: card_block_requests
+            indexName: idx_card_block_requests_card_id
+            columns:
+              - column:
+                  name: card_id
+
+        - createIndex:
+            tableName: card_block_requests
+            indexName: idx_card_block_requests_status
+            columns:
+              - column:
+                  name: request_status
+
+        - createIndex:
+            tableName: card_block_requests
+            indexName: idx_card_block_requests_processed_by
+            columns:
+              - column:
+                  name: processed_by
+
+        - addForeignKeyConstraint:
+            constraintName: fk_card_block_requests_card
+            baseTableName: card_block_requests
+            baseColumnNames: card_id
+            referencedTableName: cards
+            referencedColumnNames: id_card
+            onDelete: CASCADE
+            onUpdate: CASCADE
+
+        - addForeignKeyConstraint:
+            constraintName: fk_card_block_requests_processed_by
+            baseTableName: card_block_requests
+            baseColumnNames: processed_by
+            referencedTableName: users
+            referencedColumnNames: id_user
+            onDelete: SET NULL
+            onUpdate: CASCADE
+
+      rollback:
+        - dropTable:
+            tableName: card_block_requests
