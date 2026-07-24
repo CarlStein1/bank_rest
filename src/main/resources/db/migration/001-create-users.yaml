@@ -35,7 +35,7 @@ databaseChangeLog:
                     nullable: false
 
               - column:
-                  name: role_id
+                  name: role
                   type: VARCHAR(20)
                   constraints:
                     nullable: false

@@ -30,7 +30,7 @@ databaseChangeLog:
 
               - column:
                   name: number_iv
-                  type: BINARY(12)
+                  type: VARBINARY(12)
                   constraints:
                     nullable: false
 
@@ -76,6 +76,13 @@ databaseChangeLog:
                   name: updated_at
                   type: TIMESTAMP
                   defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
                   constraints:
                     nullable: false
 
