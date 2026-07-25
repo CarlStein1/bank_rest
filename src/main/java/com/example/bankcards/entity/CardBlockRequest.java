@@ -3,9 +3,11 @@ package com.example.bankcards.entity;
 import com.example.bankcards.entity.enums.CardBlockRequestStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+@Getter
 @Entity
 @Table(name = "card_block_requests")
 public class CardBlockRequest {
