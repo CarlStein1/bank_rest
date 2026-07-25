@@ -1,9 +1,11 @@
 package com.example.bankcards.entity;
 
 import jakarta.persistence.*;
-import com.example.bankcards.entity.enums.*;
+import com.example.bankcards.entity.enums.UserRole;
 import jakarta.validation.constraints.*;
+import lombok.Getter;
 
+@Getter
 @Entity
 @Table(name = "users")
 public class User {
@@ -38,6 +40,7 @@ public class User {
     private String login;
 
     @NotBlank
+    @Size(max = 255)
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 

@@ -7,7 +7,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.validation.constraints.*;
+import lombok.Getter;
 
+@Getter
 @Entity
 @Table(name = "cards")
 public class Card {
@@ -20,7 +22,7 @@ public class Card {
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
-    private User owner;
+    private User user;
 
     @NotNull
     @Size(max = 64)
@@ -72,14 +74,14 @@ public class Card {
     }
 
     public Card(
-            User owner,
+            User user,
             byte[] encryptedNumber,
             byte[] numberIv,
             String numberLastFour,
             Short encryptionKeyVersion,
             LocalDate expirationDate
     ) {
-        this.owner = owner;
+        this.user = user;
         this.encryptedNumber = encryptedNumber;
         this.numberIv = numberIv;
         this.numberLastFour = numberLastFour;
