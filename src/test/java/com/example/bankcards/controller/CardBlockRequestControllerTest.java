@@ -2,6 +2,7 @@ package com.example.bankcards.controller;
 
 import com.example.bankcards.dto.request.CreateCardBlockRequest;
 import com.example.bankcards.dto.request.ProcessCardBlockRequest;
+import com.example.bankcards.dto.response.CardBlockRequestResponse;
 import com.example.bankcards.entity.enums.CardBlockRequestStatus;
 import com.example.bankcards.security.UserPrincipal;
 import com.example.bankcards.service.CardBlockRequestService;
@@ -12,9 +13,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.MethodParameter;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -22,6 +25,9 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,6 +41,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
@@ -66,20 +73,27 @@ class CardBlockRequestControllerTest {
                         authenticationPrincipalResolver(),
                         new PageableHandlerMethodArgumentResolver()
                 )
+                .setMessageConverters(
+                        new JacksonJsonHttpMessageConverter()
+                )
                 .build();
     }
-
-    // -------------------------------------------------------------------------
-    // Создание заявки пользователем
-    // -------------------------------------------------------------------------
 
     @Test
     void createBlockRequest_shouldReturnCreatedAndPassDataToService()
             throws Exception {
 
-        // Arrange
         when(principal.getId())
                 .thenReturn(USER_ID);
+
+        when(cardBlockRequestService.createBlockRequest(
+                eq(USER_ID),
+                eq(CARD_ID),
+                any(CreateCardBlockRequest.class)
+        )).thenReturn(response(
+                CardBlockRequestStatus.PENDING,
+                null
+        ));
 
         String requestBody = """
                 {
@@ -87,7 +101,6 @@ class CardBlockRequestControllerTest {
                 }
                 """;
 
-        // Act and Assert
         mockMvc.perform(
                         post(
                                 "/api/cards/{cardId}/block-requests",
@@ -98,7 +111,13 @@ class CardBlockRequestControllerTest {
                 )
                 .andDo(print())
                 .andExpect(status().isCreated())
-                .andExpect(content().string(""));
+                .andExpect(content().contentTypeCompatibleWith(
+                        MediaType.APPLICATION_JSON
+                ))
+                .andExpect(jsonPath("$.id").value(REQUEST_ID))
+                .andExpect(jsonPath("$.cardId").value(CARD_ID))
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.reason").value("Карта потеряна"));
 
         ArgumentCaptor<CreateCardBlockRequest> requestCaptor =
                 ArgumentCaptor.forClass(
@@ -111,12 +130,9 @@ class CardBlockRequestControllerTest {
                 requestCaptor.capture()
         );
 
-        CreateCardBlockRequest capturedRequest =
-                requestCaptor.getValue();
-
         assertEquals(
                 "Карта потеряна",
-                capturedRequest.reason()
+                requestCaptor.getValue().reason()
         );
 
         verify(principal).getId();
@@ -140,13 +156,23 @@ class CardBlockRequestControllerTest {
         verifyNoInteractions(principal);
     }
 
-    // -------------------------------------------------------------------------
-    // Получение заявок администратором
-    // -------------------------------------------------------------------------
-
     @Test
     void getAllBlockRequests_shouldReturnOk_whenStatusIsMissing()
             throws Exception {
+
+        when(cardBlockRequestService.getAllBlockRequests(
+                isNull(),
+                any(Pageable.class)
+        )).thenReturn(
+                new PageImpl<>(
+                        List.of(
+                                response(
+                                        CardBlockRequestStatus.PENDING,
+                                        null
+                                )
+                        )
+                )
+        );
 
         mockMvc.perform(
                         get("/api/admin/block-requests")
@@ -156,7 +182,12 @@ class CardBlockRequestControllerTest {
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(content().string(""));
+                .andExpect(content().contentTypeCompatibleWith(
+                        MediaType.APPLICATION_JSON
+                ))
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(REQUEST_ID));
 
         ArgumentCaptor<Pageable> pageableCaptor =
                 ArgumentCaptor.forClass(Pageable.class);
@@ -184,6 +215,20 @@ class CardBlockRequestControllerTest {
     void getAllBlockRequests_shouldPassStatusToService()
             throws Exception {
 
+        when(cardBlockRequestService.getAllBlockRequests(
+                eq(CardBlockRequestStatus.PENDING),
+                any(Pageable.class)
+        )).thenReturn(
+                new PageImpl<>(
+                        List.of(
+                                response(
+                                        CardBlockRequestStatus.PENDING,
+                                        null
+                                )
+                        )
+                )
+        );
+
         mockMvc.perform(
                         get("/api/admin/block-requests")
                                 .param("status", "PENDING")
@@ -192,7 +237,9 @@ class CardBlockRequestControllerTest {
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(content().string(""));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].status")
+                        .value("PENDING"));
 
         ArgumentCaptor<Pageable> pageableCaptor =
                 ArgumentCaptor.forClass(Pageable.class);
@@ -223,13 +270,17 @@ class CardBlockRequestControllerTest {
         verifyNoInteractions(cardBlockRequestService);
     }
 
-    // -------------------------------------------------------------------------
-    // Получение заявки по ID
-    // -------------------------------------------------------------------------
-
     @Test
     void getBlockRequestById_shouldReturnOkAndCallService()
             throws Exception {
+
+        when(cardBlockRequestService.getBlockRequestById(REQUEST_ID))
+                .thenReturn(
+                        response(
+                                CardBlockRequestStatus.PENDING,
+                                null
+                        )
+                );
 
         mockMvc.perform(
                         get(
@@ -239,23 +290,30 @@ class CardBlockRequestControllerTest {
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(content().string(""));
+                .andExpect(jsonPath("$.id").value(REQUEST_ID))
+                .andExpect(jsonPath("$.cardId").value(CARD_ID));
 
         verify(cardBlockRequestService)
                 .getBlockRequestById(REQUEST_ID);
     }
 
-    // -------------------------------------------------------------------------
-    // Подтверждение заявки
-    // -------------------------------------------------------------------------
-
     @Test
     void approveBlockRequest_shouldReturnOkAndPassDataToService()
             throws Exception {
 
-        // Arrange
         when(principal.getId())
                 .thenReturn(ADMIN_ID);
+
+        when(cardBlockRequestService.approveBlockRequest(
+                eq(ADMIN_ID),
+                eq(REQUEST_ID),
+                any(ProcessCardBlockRequest.class)
+        )).thenReturn(
+                response(
+                        CardBlockRequestStatus.APPROVED,
+                        ADMIN_ID
+                )
+        );
 
         String requestBody = """
                 {
@@ -263,7 +321,6 @@ class CardBlockRequestControllerTest {
                 }
                 """;
 
-        // Act and Assert
         mockMvc.perform(
                         patch(
                                 "/api/admin/block-requests/{requestId}/approve",
@@ -274,7 +331,8 @@ class CardBlockRequestControllerTest {
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(content().string(""));
+                .andExpect(jsonPath("$.status").value("APPROVED"))
+                .andExpect(jsonPath("$.processedById").value(ADMIN_ID));
 
         ArgumentCaptor<ProcessCardBlockRequest> requestCaptor =
                 ArgumentCaptor.forClass(
@@ -288,12 +346,9 @@ class CardBlockRequestControllerTest {
                         requestCaptor.capture()
                 );
 
-        ProcessCardBlockRequest capturedRequest =
-                requestCaptor.getValue();
-
         assertEquals(
                 "Заявка подтверждена",
-                capturedRequest.adminComment()
+                requestCaptor.getValue().adminComment()
         );
 
         verify(principal).getId();
@@ -317,17 +372,23 @@ class CardBlockRequestControllerTest {
         verifyNoInteractions(principal);
     }
 
-    // -------------------------------------------------------------------------
-    // Отклонение заявки
-    // -------------------------------------------------------------------------
-
     @Test
     void rejectBlockRequest_shouldReturnOkAndPassDataToService()
             throws Exception {
 
-        // Arrange
         when(principal.getId())
                 .thenReturn(ADMIN_ID);
+
+        when(cardBlockRequestService.rejectBlockRequest(
+                eq(ADMIN_ID),
+                eq(REQUEST_ID),
+                any(ProcessCardBlockRequest.class)
+        )).thenReturn(
+                response(
+                        CardBlockRequestStatus.REJECTED,
+                        ADMIN_ID
+                )
+        );
 
         String requestBody = """
                 {
@@ -335,7 +396,6 @@ class CardBlockRequestControllerTest {
                 }
                 """;
 
-        // Act and Assert
         mockMvc.perform(
                         patch(
                                 "/api/admin/block-requests/{requestId}/reject",
@@ -346,7 +406,8 @@ class CardBlockRequestControllerTest {
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(content().string(""));
+                .andExpect(jsonPath("$.status").value("REJECTED"))
+                .andExpect(jsonPath("$.processedById").value(ADMIN_ID));
 
         ArgumentCaptor<ProcessCardBlockRequest> requestCaptor =
                 ArgumentCaptor.forClass(
@@ -360,12 +421,9 @@ class CardBlockRequestControllerTest {
                         requestCaptor.capture()
                 );
 
-        ProcessCardBlockRequest capturedRequest =
-                requestCaptor.getValue();
-
         assertEquals(
                 "Недостаточно информации",
-                capturedRequest.adminComment()
+                requestCaptor.getValue().adminComment()
         );
 
         verify(principal).getId();
@@ -387,6 +445,37 @@ class CardBlockRequestControllerTest {
 
         verifyNoInteractions(cardBlockRequestService);
         verifyNoInteractions(principal);
+    }
+
+    private CardBlockRequestResponse response(
+            CardBlockRequestStatus status,
+            Long processedById
+    ) {
+        LocalDateTime createdAt =
+                LocalDateTime.of(2026, 7, 28, 12, 0);
+
+        LocalDateTime processedAt =
+                processedById == null
+                        ? null
+                        : LocalDateTime.of(2026, 7, 28, 12, 30);
+
+        String adminComment =
+                processedById == null
+                        ? null
+                        : status == CardBlockRequestStatus.APPROVED
+                          ? "Заявка подтверждена"
+                          : "Недостаточно информации";
+
+        return new CardBlockRequestResponse(
+                REQUEST_ID,
+                CARD_ID,
+                status,
+                "Карта потеряна",
+                createdAt,
+                processedAt,
+                processedById,
+                adminComment
+        );
     }
 
     private HandlerMethodArgumentResolver

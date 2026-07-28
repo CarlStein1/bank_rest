@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -104,11 +105,14 @@ public class UserController {
                     )
             )
     })
-    public ResponseEntity<Page<UserResponse>> getAllUsers(
+    public ResponseEntity<PagedModel<UserResponse>> getAllUsers(
             @ParameterObject Pageable pageable
     ) {
+        Page<UserResponse> users =
+                userService.getAllUsers(pageable);
+
         return ResponseEntity.ok(
-                userService.getAllUsers(pageable)
+                new PagedModel<>(users)
         );
     }
 

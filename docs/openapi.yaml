@@ -7,38 +7,38 @@ info:
     и переводами между собственными картами.
   version: "1.0"
 servers:
-  - url: http://localhost:8080
-    description: Generated server url
+- url: http://localhost:8080
+  description: Generated server url
 tags:
-  - name: Карты
-    description: "Создание, управление и просмотр банковских карт"
-  - name: Авторизация
-    description: Аутентификация пользователей и получение JWT-токена
-  - name: Переводы
-    description: Переводы денежных средств между собственными картами
-  - name: Пользователи
-    description: Управление пользователями администратором
-  - name: Заявки на блокировку карт
-    description: |
-      Создание заявок пользователями
-      и обработка заявок администраторами
+- name: Карты
+  description: "Создание, управление и просмотр банковских карт"
+- name: Авторизация
+  description: Аутентификация пользователей и получение JWT-токена
+- name: Переводы
+  description: Переводы денежных средств между собственными картами
+- name: Пользователи
+  description: Управление пользователями администратором
+- name: Заявки на блокировку карт
+  description: |
+    Создание заявок пользователями
+    и обработка заявок администраторами
 paths:
   /api/admin/users/{userId}:
     get:
       tags:
-        - Пользователи
+      - Пользователи
       summary: Получить пользователя
       description: Возвращает пользователя по его идентификатору
       operationId: getUserById
       parameters:
-        - name: userId
-          in: path
-          description: Идентификатор пользователя
-          required: true
-          schema:
-            type: integer
-            format: int64
-          example: 1
+      - name: userId
+        in: path
+        description: Идентификатор пользователя
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 1
       responses:
         "200":
           description: Пользователь найден
@@ -59,22 +59,22 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiErrorResponse"
       security:
-        - bearerAuth: []
+      - bearerAuth: []
     put:
       tags:
-        - Пользователи
+      - Пользователи
       summary: Обновить пользователя
       description: Изменяет данные существующего пользователя
       operationId: updateUser
       parameters:
-        - name: userId
-          in: path
-          description: Идентификатор пользователя
-          required: true
-          schema:
-            type: integer
-            format: int64
-          example: 1
+      - name: userId
+        in: path
+        description: Идентификатор пользователя
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 1
       requestBody:
         content:
           application/json:
@@ -107,22 +107,22 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiErrorResponse"
       security:
-        - bearerAuth: []
+      - bearerAuth: []
     delete:
       tags:
-        - Пользователи
+      - Пользователи
       summary: Удалить пользователя
       description: Удаляет пользователя по его идентификатору
       operationId: deleteUser
       parameters:
-        - name: userId
-          in: path
-          description: Идентификатор пользователя
-          required: true
-          schema:
-            type: integer
-            format: int64
-          example: 1
+      - name: userId
+        in: path
+        description: Идентификатор пользователя
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 1
       responses:
         "204":
           description: Пользователь успешно удалён
@@ -139,11 +139,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiErrorResponse"
       security:
-        - bearerAuth: []
+      - bearerAuth: []
   /api/transfers:
     post:
       tags:
-        - Переводы
+      - Переводы
       summary: Перевести средства между своими картами
       description: |
         Выполняет перевод между двумя картами,
@@ -195,25 +195,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/TransferResponse"
       security:
-        - bearerAuth: []
+      - bearerAuth: []
   /api/cards/{cardId}/block-requests:
     post:
       tags:
-        - Заявки на блокировку карт
+      - Заявки на блокировку карт
       summary: Создать заявку на блокировку карты
       description: |
         Создаёт заявку на блокировку карты,
         принадлежащей текущему пользователю.
       operationId: createBlockRequest
       parameters:
-        - name: cardId
-          in: path
-          description: Идентификатор карты
-          required: true
-          schema:
-            type: integer
-            format: int64
-          example: 1
+      - name: cardId
+        in: path
+        description: Идентификатор карты
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 1
       requestBody:
         content:
           application/json:
@@ -226,31 +226,31 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
         "400":
           description: Переданы некорректные данные
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
         "401":
           description: Пользователь не авторизован
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
         "403":
           description: Карта принадлежит другому пользователю
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
         "404":
           description: Карта не найдена
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
         "409":
           description: |
             Карта уже заблокирована
@@ -258,13 +258,13 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
       security:
-        - bearerAuth: []
+      - bearerAuth: []
   /api/auth/login:
     post:
       tags:
-        - Авторизация
+      - Авторизация
       summary: Авторизация пользователя
       description: |
         Проверяет логин и пароль пользователя.
@@ -305,43 +305,43 @@ paths:
   /api/admin/users:
     get:
       tags:
-        - Пользователи
+      - Пользователи
       summary: Получить список пользователей
       description: Возвращает страницу пользователей с поддержкой пагинации и сортировки
       operationId: getAllUsers
       parameters:
-        - name: page
-          in: query
-          description: Zero-based page index (0..N)
-          required: false
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-        - name: size
-          in: query
-          description: The size of the page to be returned
-          required: false
-          schema:
-            type: integer
-            default: 20
-            minimum: 1
-        - name: sort
-          in: query
-          description: "Sorting criteria in the format: property,(asc|desc). Default\
+      - name: page
+        in: query
+        description: Zero-based page index (0..N)
+        required: false
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+      - name: size
+        in: query
+        description: The size of the page to be returned
+        required: false
+        schema:
+          type: integer
+          default: 20
+          minimum: 1
+      - name: sort
+        in: query
+        description: "Sorting criteria in the format: property,(asc|desc). Default\
           \ sort order is ascending. Multiple sort criteria are supported."
-          required: false
-          schema:
-            type: array
-            items:
-              type: string
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
       responses:
         "200":
           description: Список пользователей успешно получен
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/PageUserResponse"
+                $ref: "#/components/schemas/PagedModelUserResponse"
         "403":
           description: Недостаточно прав для выполнения операции
           content:
@@ -349,10 +349,10 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiErrorResponse"
       security:
-        - bearerAuth: []
+      - bearerAuth: []
     post:
       tags:
-        - Пользователи
+      - Пользователи
       summary: Создать пользователя
       description: Создаёт нового пользователя с ролью USER или ADMIN
       operationId: createUser
@@ -388,23 +388,23 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiErrorResponse"
       security:
-        - bearerAuth: []
+      - bearerAuth: []
   /api/admin/users/{userId}/cards:
     post:
       tags:
-        - Карты
+      - Карты
       summary: Создать карту
       description: Создаёт новую банковскую карту для указанного пользователя
       operationId: createCard
       parameters:
-        - name: userId
-          in: path
-          description: Идентификатор владельца карты
-          required: true
-          schema:
-            type: integer
-            format: int64
-          example: 1
+      - name: userId
+        in: path
+        description: Идентификатор владельца карты
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 1
       responses:
         "201":
           description: Карта успешно создана
@@ -425,23 +425,23 @@ paths:
               schema:
                 $ref: "#/components/schemas/CardResponse"
       security:
-        - bearerAuth: []
+      - bearerAuth: []
   /api/admin/cards/{cardId}/block:
     patch:
       tags:
-        - Карты
+      - Карты
       summary: Заблокировать карту
       description: Блокирует выбранную банковскую карту
       operationId: blockCard
       parameters:
-        - name: cardId
-          in: path
-          description: Идентификатор карты
-          required: true
-          schema:
-            type: integer
-            format: int64
-          example: 1
+      - name: cardId
+        in: path
+        description: Идентификатор карты
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 1
       responses:
         "200":
           description: Карта успешно заблокирована
@@ -462,23 +462,23 @@ paths:
               schema:
                 $ref: "#/components/schemas/CardResponse"
       security:
-        - bearerAuth: []
+      - bearerAuth: []
   /api/admin/cards/{cardId}/activate:
     patch:
       tags:
-        - Карты
+      - Карты
       summary: Активировать карту
       description: Активирует выбранную банковскую карту
       operationId: activateCard
       parameters:
-        - name: cardId
-          in: path
-          description: Идентификатор карты
-          required: true
-          schema:
-            type: integer
-            format: int64
-          example: 1
+      - name: cardId
+        in: path
+        description: Идентификатор карты
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 1
       responses:
         "200":
           description: Карта успешно активирована
@@ -499,25 +499,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/CardResponse"
       security:
-        - bearerAuth: []
+      - bearerAuth: []
   /api/admin/block-requests/{requestId}/reject:
     patch:
       tags:
-        - Заявки на блокировку карт
+      - Заявки на блокировку карт
       summary: Отклонить заявку
       description: |
         Отклоняет заявку на блокировку.
         Статус карты при этом не изменяется.
       operationId: rejectBlockRequest
       parameters:
-        - name: requestId
-          in: path
-          description: Идентификатор заявки
-          required: true
-          schema:
-            type: integer
-            format: int64
-          example: 1
+      - name: requestId
+        in: path
+        description: Идентификатор заявки
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 1
       requestBody:
         content:
           application/json:
@@ -530,50 +530,50 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
         "400":
           description: Переданы некорректные данные
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
         "403":
           description: Недостаточно прав
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
         "404":
           description: Заявка не найдена
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
         "409":
           description: Заявка уже была обработана
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
       security:
-        - bearerAuth: []
+      - bearerAuth: []
   /api/admin/block-requests/{requestId}/approve:
     patch:
       tags:
-        - Заявки на блокировку карт
+      - Заявки на блокировку карт
       summary: Подтвердить заявку
       description: |
         Подтверждает заявку и блокирует связанную с ней карту.
       operationId: approveBlockRequest
       parameters:
-        - name: requestId
-          in: path
-          description: Идентификатор заявки
-          required: true
-          schema:
-            type: integer
-            format: int64
-          example: 1
+      - name: requestId
+        in: path
+        description: Идентификатор заявки
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 1
       requestBody:
         content:
           application/json:
@@ -586,68 +586,68 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
         "400":
           description: Переданы некорректные данные
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
         "403":
           description: Недостаточно прав
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
         "404":
           description: Заявка не найдена
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
         "409":
           description: Заявка уже была обработана
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
       security:
-        - bearerAuth: []
+      - bearerAuth: []
   /api/cards:
     get:
       tags:
-        - Карты
+      - Карты
       summary: Получить свои карты
       description: |
         Возвращает страницу банковских карт,
         принадлежащих текущему авторизованному пользователю.
       operationId: getMyCards
       parameters:
-        - name: page
-          in: query
-          description: Zero-based page index (0..N)
-          required: false
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-        - name: size
-          in: query
-          description: The size of the page to be returned
-          required: false
-          schema:
-            type: integer
-            default: 20
-            minimum: 1
-        - name: sort
-          in: query
-          description: "Sorting criteria in the format: property,(asc|desc). Default\
+      - name: page
+        in: query
+        description: Zero-based page index (0..N)
+        required: false
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+      - name: size
+        in: query
+        description: The size of the page to be returned
+        required: false
+        schema:
+          type: integer
+          default: 20
+          minimum: 1
+      - name: sort
+        in: query
+        description: "Sorting criteria in the format: property,(asc|desc). Default\
           \ sort order is ascending. Multiple sort criteria are supported."
-          required: false
-          schema:
-            type: array
-            items:
-              type: string
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
       responses:
         "200":
           description: Страница карт успешно получена
@@ -662,25 +662,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/PageCardResponse"
       security:
-        - bearerAuth: []
+      - bearerAuth: []
   /api/cards/{cardId}:
     get:
       tags:
-        - Карты
+      - Карты
       summary: Получить свою карту
       description: |
         Возвращает карту только в том случае,
         если она принадлежит текущему пользователю.
       operationId: getMyCard
       parameters:
-        - name: cardId
-          in: path
-          description: Идентификатор карты
-          required: true
-          schema:
-            type: integer
-            format: int64
-          example: 1
+      - name: cardId
+        in: path
+        description: Идентификатор карты
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 1
       responses:
         "200":
           description: Карта успешно получена
@@ -707,25 +707,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/CardResponse"
       security:
-        - bearerAuth: []
+      - bearerAuth: []
   /api/cards/{cardId}/balance:
     get:
       tags:
-        - Карты
+      - Карты
       summary: Получить баланс своей карты
       description: |
         Возвращает баланс карты только в том случае,
         если она принадлежит текущему пользователю.
       operationId: getMyCardBalance
       parameters:
-        - name: cardId
-          in: path
-          description: Идентификатор карты
-          required: true
-          schema:
-            type: integer
-            format: int64
-          example: 1
+      - name: cardId
+        in: path
+        description: Идентификатор карты
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 1
       responses:
         "200":
           description: Баланс успешно получен
@@ -752,40 +752,40 @@ paths:
               schema:
                 type: number
       security:
-        - bearerAuth: []
+      - bearerAuth: []
   /api/admin/cards:
     get:
       tags:
-        - Карты
+      - Карты
       summary: Получить все карты
       description: Возвращает страницу всех банковских карт
       operationId: getAllCards
       parameters:
-        - name: page
-          in: query
-          description: Zero-based page index (0..N)
-          required: false
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-        - name: size
-          in: query
-          description: The size of the page to be returned
-          required: false
-          schema:
-            type: integer
-            default: 20
-            minimum: 1
-        - name: sort
-          in: query
-          description: "Sorting criteria in the format: property,(asc|desc). Default\
+      - name: page
+        in: query
+        description: Zero-based page index (0..N)
+        required: false
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+      - name: size
+        in: query
+        description: The size of the page to be returned
+        required: false
+        schema:
+          type: integer
+          default: 20
+          minimum: 1
+      - name: sort
+        in: query
+        description: "Sorting criteria in the format: property,(asc|desc). Default\
           \ sort order is ascending. Multiple sort criteria are supported."
-          required: false
-          schema:
-            type: array
-            items:
-              type: string
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
       responses:
         "200":
           description: Страница карт успешно получена
@@ -800,23 +800,23 @@ paths:
               schema:
                 $ref: "#/components/schemas/PageCardResponse"
       security:
-        - bearerAuth: []
+      - bearerAuth: []
   /api/admin/cards/{cardId}:
     get:
       tags:
-        - Карты
+      - Карты
       summary: Получить карту
       description: Возвращает банковскую карту по её идентификатору
       operationId: getCardById
       parameters:
-        - name: cardId
-          in: path
-          description: Идентификатор карты
-          required: true
-          schema:
-            type: integer
-            format: int64
-          example: 1
+      - name: cardId
+        in: path
+        description: Идентификатор карты
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 1
       responses:
         "200":
           description: Карта успешно получена
@@ -837,22 +837,22 @@ paths:
               schema:
                 $ref: "#/components/schemas/CardResponse"
       security:
-        - bearerAuth: []
+      - bearerAuth: []
     delete:
       tags:
-        - Карты
+      - Карты
       summary: Удалить карту
       description: Удаляет банковскую карту по её идентификатору
       operationId: deleteCard
       parameters:
-        - name: cardId
-          in: path
-          description: Идентификатор карты
-          required: true
-          schema:
-            type: integer
-            format: int64
-          example: 1
+      - name: cardId
+        in: path
+        description: Идентификатор карты
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 1
       responses:
         "204":
           description: Карта успешно удалена
@@ -861,111 +861,111 @@ paths:
         "404":
           description: Карта не найдена
       security:
-        - bearerAuth: []
+      - bearerAuth: []
   /api/admin/block-requests:
     get:
       tags:
-        - Заявки на блокировку карт
+      - Заявки на блокировку карт
       summary: Получить заявки на блокировку
       description: |
         Возвращает страницу заявок на блокировку карт.
         Поддерживает фильтрацию по статусу и пагинацию.
       operationId: getAllBlockRequests
       parameters:
-        - name: status
-          in: query
-          description: Статус заявки
-          required: false
-          schema:
-            type: string
-            enum:
-              - PENDING
-              - APPROVED
-              - REJECTED
-          example: PENDING
-        - name: page
-          in: query
-          description: Zero-based page index (0..N)
-          required: false
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
-        - name: size
-          in: query
-          description: The size of the page to be returned
-          required: false
-          schema:
-            type: integer
-            default: 20
-            minimum: 1
-        - name: sort
-          in: query
-          description: "Sorting criteria in the format: property,(asc|desc). Default\
+      - name: status
+        in: query
+        description: Статус заявки
+        required: false
+        schema:
+          type: string
+          enum:
+          - PENDING
+          - APPROVED
+          - REJECTED
+        example: PENDING
+      - name: page
+        in: query
+        description: Zero-based page index (0..N)
+        required: false
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+      - name: size
+        in: query
+        description: The size of the page to be returned
+        required: false
+        schema:
+          type: integer
+          default: 20
+          minimum: 1
+      - name: sort
+        in: query
+        description: "Sorting criteria in the format: property,(asc|desc). Default\
           \ sort order is ascending. Multiple sort criteria are supported."
-          required: false
-          schema:
-            type: array
-            items:
-              type: string
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
       responses:
         "200":
           description: Страница заявок успешно получена
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/PageCardBlockRequest"
+                $ref: "#/components/schemas/PagedModelCardBlockRequestResponse"
         "401":
           description: Пользователь не авторизован
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/PageCardBlockRequest"
+                $ref: "#/components/schemas/PagedModelCardBlockRequestResponse"
         "403":
           description: Недостаточно прав
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/PageCardBlockRequest"
+                $ref: "#/components/schemas/PagedModelCardBlockRequestResponse"
       security:
-        - bearerAuth: []
+      - bearerAuth: []
   /api/admin/block-requests/{requestId}:
     get:
       tags:
-        - Заявки на блокировку карт
+      - Заявки на блокировку карт
       summary: Получить заявку
       description: Возвращает заявку на блокировку по идентификатору
       operationId: getBlockRequestById
       parameters:
-        - name: requestId
-          in: path
-          description: Идентификатор заявки
-          required: true
-          schema:
-            type: integer
-            format: int64
-          example: 1
+      - name: requestId
+        in: path
+        description: Идентификатор заявки
+        required: true
+        schema:
+          type: integer
+          format: int64
+        example: 1
       responses:
         "200":
           description: Заявка успешно получена
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
         "403":
           description: Недостаточно прав
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
         "404":
           description: Заявка не найдена
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/CardBlockRequest"
+                $ref: "#/components/schemas/CardBlockRequestResponse"
       security:
-        - bearerAuth: []
+      - bearerAuth: []
 components:
   schemas:
     UpdateUserRequest:
@@ -994,13 +994,13 @@ components:
           type: string
           description: Новая роль пользователя
           enum:
-            - ADMIN
-            - USER
+          - ADMIN
+          - USER
           example: USER
       required:
-        - firstName
-        - lastName
-        - role
+      - firstName
+      - lastName
+      - role
     ApiErrorResponse:
       type: object
       description: Возникновение ошибки при запросе на сервер
@@ -1055,8 +1055,8 @@ components:
           type: string
           description: Роль пользователя
           enum:
-            - ADMIN
-            - USER
+          - ADMIN
+          - USER
           example: USER
     TransferRequest:
       type: object
@@ -1078,9 +1078,9 @@ components:
           example: 500.0
           minimum: 0.01
       required:
-        - amount
-        - fromCardId
-        - toCardId
+      - amount
+      - fromCardId
+      - toCardId
     TransferResponse:
       type: object
       description: Результат перевода между картами
@@ -1117,146 +1117,34 @@ components:
           example: Карта была потеряна
           maxLength: 500
           minLength: 0
-    Card:
+    CardBlockRequestResponse:
       type: object
       properties:
         id:
           type: integer
           format: int64
-        user:
-          $ref: "#/components/schemas/User"
-        encryptedNumber:
-          type: string
-          format: byte
-          maxLength: 64
-          minLength: 0
-        numberIv:
-          type: string
-          format: byte
-          maxLength: 12
-          minLength: 12
-        numberLastFour:
-          type: string
-          pattern: "\\d{4}"
-        encryptionKeyVersion:
+        cardId:
           type: integer
-          format: int32
-        expirationDate:
-          type: string
-          format: date
+          format: int64
         status:
           type: string
           enum:
-            - ACTIVE
-            - BLOCKED
-            - EXPIRED
-        balance:
-          type: number
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        version:
-          type: integer
-          format: int64
-        active:
-          type: boolean
-        blocked:
-          type: boolean
-        expired:
-          type: boolean
-        maskedNumber:
-          type: string
-      required:
-        - balance
-        - createdAt
-        - encryptedNumber
-        - encryptionKeyVersion
-        - expirationDate
-        - numberIv
-        - numberLastFour
-        - status
-        - updatedAt
-        - user
-    CardBlockRequest:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        card:
-          $ref: "#/components/schemas/Card"
-        status:
-          type: string
-          enum:
-            - PENDING
-            - APPROVED
-            - REJECTED
+          - PENDING
+          - APPROVED
+          - REJECTED
         reason:
           type: string
-          maxLength: 500
-          minLength: 0
         createdAt:
           type: string
           format: date-time
         processedAt:
           type: string
           format: date-time
-        processedBy:
-          $ref: "#/components/schemas/User"
-        adminComment:
-          type: string
-          maxLength: 500
-          minLength: 0
-        pending:
-          type: boolean
-      required:
-        - card
-        - createdAt
-        - status
-    User:
-      type: object
-      properties:
-        id:
+        processedById:
           type: integer
           format: int64
-        firstName:
+        adminComment:
           type: string
-          maxLength: 50
-          minLength: 0
-        middleName:
-          type: string
-          maxLength: 50
-          minLength: 0
-        lastName:
-          type: string
-          maxLength: 50
-          minLength: 0
-        role:
-          type: string
-          enum:
-            - ADMIN
-            - USER
-        login:
-          type: string
-          maxLength: 50
-          minLength: 3
-        passwordHash:
-          type: string
-          maxLength: 255
-          minLength: 0
-        fullName:
-          type: string
-        admin:
-          type: boolean
-      required:
-        - firstName
-        - lastName
-        - login
-        - passwordHash
-        - role
     LoginRequest:
       type: object
       description: Данные для авторизации
@@ -1274,8 +1162,8 @@ components:
           maxLength: 100
           minLength: 8
       required:
-        - login
-        - password
+      - login
+      - password
     AuthResponse:
       type: object
       description: Результат успешной авторизации
@@ -1324,15 +1212,15 @@ components:
           type: string
           description: Роль пользователя
           enum:
-            - ADMIN
-            - USER
+          - ADMIN
+          - USER
           example: USER
       required:
-        - firstName
-        - lastName
-        - login
-        - password
-        - role
+      - firstName
+      - lastName
+      - login
+      - password
+      - role
     CardResponse:
       type: object
       description: Информация о банковской карте
@@ -1360,9 +1248,9 @@ components:
           type: string
           description: Статус карты
           enum:
-            - ACTIVE
-            - BLOCKED
-            - EXPIRED
+          - ACTIVE
+          - BLOCKED
+          - EXPIRED
           example: ACTIVE
         balance:
           type: number
@@ -1381,12 +1269,16 @@ components:
     PageCardResponse:
       type: object
       properties:
-        totalPages:
-          type: integer
-          format: int32
         totalElements:
           type: integer
           format: int64
+        totalPages:
+          type: integer
+          format: int32
+        first:
+          type: boolean
+        last:
+          type: boolean
         size:
           type: integer
           format: int32
@@ -1399,10 +1291,6 @@ components:
           format: int32
         sort:
           $ref: "#/components/schemas/SortObject"
-        first:
-          type: boolean
-        last:
-          type: boolean
         numberOfElements:
           type: integer
           format: int32
@@ -1420,10 +1308,10 @@ components:
           $ref: "#/components/schemas/SortObject"
         paged:
           type: boolean
-        pageNumber:
+        pageSize:
           type: integer
           format: int32
-        pageSize:
+        pageNumber:
           type: integer
           format: int32
         unpaged:
@@ -1437,70 +1325,39 @@ components:
           type: boolean
         unsorted:
           type: boolean
-    PageUserResponse:
+    PageMetadata:
       type: object
       properties:
-        totalPages:
+        size:
           type: integer
-          format: int32
+          format: int64
+        number:
+          type: integer
+          format: int64
         totalElements:
           type: integer
           format: int64
-        size:
+        totalPages:
           type: integer
-          format: int32
+          format: int64
+    PagedModelUserResponse:
+      type: object
+      properties:
         content:
           type: array
           items:
             $ref: "#/components/schemas/UserResponse"
-        number:
-          type: integer
-          format: int32
-        sort:
-          $ref: "#/components/schemas/SortObject"
-        first:
-          type: boolean
-        last:
-          type: boolean
-        numberOfElements:
-          type: integer
-          format: int32
-        pageable:
-          $ref: "#/components/schemas/PageableObject"
-        empty:
-          type: boolean
-    PageCardBlockRequest:
+        page:
+          $ref: "#/components/schemas/PageMetadata"
+    PagedModelCardBlockRequestResponse:
       type: object
       properties:
-        totalPages:
-          type: integer
-          format: int32
-        totalElements:
-          type: integer
-          format: int64
-        size:
-          type: integer
-          format: int32
         content:
           type: array
           items:
-            $ref: "#/components/schemas/CardBlockRequest"
-        number:
-          type: integer
-          format: int32
-        sort:
-          $ref: "#/components/schemas/SortObject"
-        first:
-          type: boolean
-        last:
-          type: boolean
-        numberOfElements:
-          type: integer
-          format: int32
-        pageable:
-          $ref: "#/components/schemas/PageableObject"
-        empty:
-          type: boolean
+            $ref: "#/components/schemas/CardBlockRequestResponse"
+        page:
+          $ref: "#/components/schemas/PageMetadata"
   securitySchemes:
     bearerAuth:
       type: http
