@@ -422,7 +422,7 @@ SELECT
     'Administrator',
     'ADMIN',
     'admin',
-    '$2y$10$JMtxrgiYJCGY6Mgx4DBHmepjah/5nlSuAjx5r/bAmHDvl.ex3LvlG'
+    '$2a$10$zfRS82m69L4VIHr6lhp5ue1D8X80TavnQg0Mm4F97uY9klLBL0U32'
 WHERE NOT EXISTS (
     SELECT 1
     FROM users

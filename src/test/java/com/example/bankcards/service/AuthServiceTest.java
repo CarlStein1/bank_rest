@@ -60,7 +60,7 @@ class AuthServiceTest {
                 new BCryptPasswordEncoder();
 
         System.out.println(
-                encoder.encode("StrongPass123")
+                encoder.encode("Admin123!")
         );
     }
 
