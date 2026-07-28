@@ -9,6 +9,7 @@ import com.example.bankcards.entity.enums.CardBlockRequestStatus;
 import com.example.bankcards.exception.CardBlockedException;
 import com.example.bankcards.exception.DuplicateBlockRequestException;
 import com.example.bankcards.repository.CardBlockRequestRepository;
+import com.example.bankcards.dto.response.CardBlockRequestResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +30,7 @@ public class CardBlockRequestService {
 
     @Transactional
     @PreAuthorize("hasRole('USER')")
-    public CardBlockRequest createBlockRequest(
+    public CardBlockRequestResponse createBlockRequest(
             Long userId,
             Long cardId,
             CreateCardBlockRequest request
@@ -55,32 +56,46 @@ public class CardBlockRequestService {
                 normalizeNullableText(request.reason())
         );
 
-        return blockRequestRepository.save(blockRequest);
+        CardBlockRequest savedRequest =
+                blockRequestRepository.save(blockRequest);
+
+        return CardBlockRequestResponse.from(savedRequest);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    public Page<CardBlockRequest> getAllBlockRequests(
+    public Page<CardBlockRequestResponse> getAllBlockRequests(
             CardBlockRequestStatus status,
             Pageable pageable
     ) {
+        Page<CardBlockRequest> requests;
+
         if (status == null) {
-            return blockRequestRepository.findAll(pageable);
+            requests = blockRequestRepository.findAll(pageable);
+        } else {
+            requests = blockRequestRepository.findAllByStatus(
+                    status,
+                    pageable
+            );
         }
 
-        return blockRequestRepository.findAllByStatus(
-                status,
-                pageable
+        return requests.map(
+                CardBlockRequestResponse::from
         );
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    public CardBlockRequest getBlockRequestById(Long requestId) {
-        return getBlockRequestEntityById(requestId);
+    public CardBlockRequestResponse getBlockRequestById(
+            Long requestId
+    ) {
+        CardBlockRequest blockRequest =
+                getBlockRequestEntityById(requestId);
+
+        return CardBlockRequestResponse.from(blockRequest);
     }
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public CardBlockRequest approveBlockRequest(
+    public CardBlockRequestResponse approveBlockRequest(
             Long adminId,
             Long requestId,
             ProcessCardBlockRequest request
@@ -97,12 +112,12 @@ public class CardBlockRequestService {
 
         blockRequest.getCard().block();
 
-        return blockRequest;
+        return CardBlockRequestResponse.from(blockRequest);
     }
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public CardBlockRequest rejectBlockRequest(
+    public CardBlockRequestResponse rejectBlockRequest(
             Long adminId,
             Long requestId,
             ProcessCardBlockRequest request
@@ -117,10 +132,10 @@ public class CardBlockRequestService {
                 normalizeNullableText(request.adminComment())
         );
 
-        return blockRequest;
+        return CardBlockRequestResponse.from(blockRequest);
     }
 
-    public CardBlockRequest getBlockRequestEntityById(Long requestId) {
+    private CardBlockRequest getBlockRequestEntityById(Long requestId) {
         return blockRequestRepository.findById(requestId)
                 .orElseThrow(
                         () -> new NoSuchElementException(

@@ -2,7 +2,7 @@ package com.example.bankcards.controller;
 
 import com.example.bankcards.dto.request.CreateCardBlockRequest;
 import com.example.bankcards.dto.request.ProcessCardBlockRequest;
-import com.example.bankcards.entity.CardBlockRequest;
+import com.example.bankcards.dto.response.CardBlockRequestResponse;
 import com.example.bankcards.entity.enums.CardBlockRequestStatus;
 import com.example.bankcards.security.UserPrincipal;
 import com.example.bankcards.service.CardBlockRequestService;
@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -80,7 +81,7 @@ public class CardBlockRequestController {
                             """
             )
     })
-    public ResponseEntity<CardBlockRequest> createBlockRequest(
+    public ResponseEntity<CardBlockRequestResponse> createBlockRequest(
             @AuthenticationPrincipal UserPrincipal principal,
 
             @Parameter(
@@ -91,7 +92,7 @@ public class CardBlockRequestController {
 
             @Valid @RequestBody CreateCardBlockRequest request
     ) {
-        CardBlockRequest response =
+        CardBlockRequestResponse response =
                 cardBlockRequestService.createBlockRequest(
                         principal.getId(),
                         cardId,
@@ -130,7 +131,7 @@ public class CardBlockRequestController {
                     description = "Недостаточно прав"
             )
     })
-    public ResponseEntity<Page<CardBlockRequest>> getAllBlockRequests(
+    public ResponseEntity<PagedModel<CardBlockRequestResponse>> getAllBlockRequests(
             @Parameter(
                     description = "Статус заявки",
                     example = "PENDING"
@@ -140,11 +141,14 @@ public class CardBlockRequestController {
 
             @ParameterObject Pageable pageable
     ) {
-        return ResponseEntity.ok(
+        Page<CardBlockRequestResponse> responsePage =
                 cardBlockRequestService.getAllBlockRequests(
                         status,
                         pageable
-                )
+                );
+
+        return ResponseEntity.ok(
+                new PagedModel<>(responsePage)
         );
     }
 
@@ -168,7 +172,7 @@ public class CardBlockRequestController {
                     description = "Заявка не найдена"
             )
     })
-    public ResponseEntity<CardBlockRequest> getBlockRequestById(
+    public ResponseEntity<CardBlockRequestResponse> getBlockRequestById(
             @Parameter(
                     description = "Идентификатор заявки",
                     example = "1"
@@ -176,7 +180,9 @@ public class CardBlockRequestController {
             @PathVariable Long requestId
     ) {
         return ResponseEntity.ok(
-                cardBlockRequestService.getBlockRequestById(requestId)
+                cardBlockRequestService.getBlockRequestById(
+                        requestId
+                )
         );
     }
 
@@ -210,7 +216,7 @@ public class CardBlockRequestController {
                     description = "Заявка уже была обработана"
             )
     })
-    public ResponseEntity<CardBlockRequest> approveBlockRequest(
+    public ResponseEntity<CardBlockRequestResponse> approveBlockRequest(
             @AuthenticationPrincipal UserPrincipal principal,
 
             @Parameter(
@@ -261,7 +267,7 @@ public class CardBlockRequestController {
                     description = "Заявка уже была обработана"
             )
     })
-    public ResponseEntity<CardBlockRequest> rejectBlockRequest(
+    public ResponseEntity<CardBlockRequestResponse> rejectBlockRequest(
             @AuthenticationPrincipal UserPrincipal principal,
 
             @Parameter(

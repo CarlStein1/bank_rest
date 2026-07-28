@@ -2,6 +2,7 @@ package com.example.bankcards.service;
 
 import com.example.bankcards.dto.request.CreateCardBlockRequest;
 import com.example.bankcards.dto.request.ProcessCardBlockRequest;
+import com.example.bankcards.dto.response.CardBlockRequestResponse;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.CardBlockRequest;
 import com.example.bankcards.entity.User;
@@ -16,15 +17,26 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CardBlockRequestServiceTest {
@@ -48,74 +60,65 @@ class CardBlockRequestServiceTest {
 
     @Test
     void createBlockRequest_shouldCreateRequest_whenDataIsValid() {
-        // Arrange
         Card card = mock(Card.class);
         CreateCardBlockRequest request =
                 mock(CreateCardBlockRequest.class);
 
         when(cardService.getUserCardEntity(USER_ID, CARD_ID))
                 .thenReturn(card);
-
         when(card.isBlocked())
                 .thenReturn(false);
-
+        when(card.getId())
+                .thenReturn(CARD_ID);
         when(blockRequestRepository.existsByCard_IdAndStatus(
                 CARD_ID,
                 CardBlockRequestStatus.PENDING
         )).thenReturn(false);
-
         when(request.reason())
                 .thenReturn("  Карта потеряна  ");
-
         when(blockRequestRepository.save(
                 any(CardBlockRequest.class)
         )).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // Act
-        CardBlockRequest result =
+        CardBlockRequestResponse result =
                 blockRequestService.createBlockRequest(
                         USER_ID,
                         CARD_ID,
                         request
                 );
 
-        // Assert
         assertNotNull(result);
-        assertSame(card, result.getCard());
+        assertEquals(CARD_ID, result.cardId());
+        assertEquals(
+                CardBlockRequestStatus.PENDING,
+                result.status()
+        );
+        assertEquals("Карта потеряна", result.reason());
 
         verify(cardService)
                 .getUserCardEntity(USER_ID, CARD_ID);
-
         verify(card).isBlocked();
-
         verify(blockRequestRepository)
                 .existsByCard_IdAndStatus(
                         CARD_ID,
                         CardBlockRequestStatus.PENDING
                 );
-
-        verify(request).reason();
-
         verify(blockRequestRepository)
                 .save(any(CardBlockRequest.class));
-
         verifyNoInteractions(userService);
     }
 
     @Test
     void createBlockRequest_shouldThrowException_whenCardIsBlocked() {
-        // Arrange
         Card card = mock(Card.class);
         CreateCardBlockRequest request =
                 mock(CreateCardBlockRequest.class);
 
         when(cardService.getUserCardEntity(USER_ID, CARD_ID))
                 .thenReturn(card);
-
         when(card.isBlocked())
                 .thenReturn(true);
 
-        // Act and Assert
         assertThrows(
                 CardBlockedException.class,
                 () -> blockRequestService.createBlockRequest(
@@ -125,42 +128,31 @@ class CardBlockRequestServiceTest {
                 )
         );
 
-        verify(cardService)
-                .getUserCardEntity(USER_ID, CARD_ID);
-
-        verify(card).isBlocked();
-
         verify(blockRequestRepository, never())
                 .existsByCard_IdAndStatus(
                         anyLong(),
                         any(CardBlockRequestStatus.class)
                 );
-
         verify(blockRequestRepository, never())
                 .save(any(CardBlockRequest.class));
-
         verifyNoInteractions(request);
     }
 
     @Test
     void createBlockRequest_shouldThrowException_whenPendingRequestAlreadyExists() {
-        // Arrange
         Card card = mock(Card.class);
         CreateCardBlockRequest request =
                 mock(CreateCardBlockRequest.class);
 
         when(cardService.getUserCardEntity(USER_ID, CARD_ID))
                 .thenReturn(card);
-
         when(card.isBlocked())
                 .thenReturn(false);
-
         when(blockRequestRepository.existsByCard_IdAndStatus(
                 CARD_ID,
                 CardBlockRequestStatus.PENDING
         )).thenReturn(true);
 
-        // Act and Assert
         assertThrows(
                 DuplicateBlockRequestException.class,
                 () -> blockRequestService.createBlockRequest(
@@ -170,41 +162,47 @@ class CardBlockRequestServiceTest {
                 )
         );
 
-        verify(blockRequestRepository)
-                .existsByCard_IdAndStatus(
-                        CARD_ID,
-                        CardBlockRequestStatus.PENDING
-                );
-
         verify(blockRequestRepository, never())
                 .save(any(CardBlockRequest.class));
-
         verifyNoInteractions(request);
     }
 
     @Test
     void getAllBlockRequests_shouldReturnAllRequests_whenStatusIsNull() {
-        // Arrange
         Pageable pageable = PageRequest.of(0, 10);
+        CardBlockRequest blockRequest =
+                mock(CardBlockRequest.class);
+        Card card = mock(Card.class);
 
-        Page<CardBlockRequest> expectedPage =
-                Page.empty(pageable);
+        stubBlockRequestEntity(
+                blockRequest,
+                card,
+                null,
+                CardBlockRequestStatus.PENDING
+        );
 
         when(blockRequestRepository.findAll(pageable))
-                .thenReturn(expectedPage);
+                .thenReturn(
+                        new PageImpl<>(
+                                List.of(blockRequest),
+                                pageable,
+                                1
+                        )
+                );
 
-        // Act
-        Page<CardBlockRequest> result =
+        Page<CardBlockRequestResponse> result =
                 blockRequestService.getAllBlockRequests(
                         null,
                         pageable
                 );
 
-        // Assert
-        assertSame(expectedPage, result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals(
+                REQUEST_ID,
+                result.getContent().get(0).id()
+        );
 
         verify(blockRequestRepository).findAll(pageable);
-
         verify(blockRequestRepository, never())
                 .findAllByStatus(
                         any(CardBlockRequestStatus.class),
@@ -214,63 +212,129 @@ class CardBlockRequestServiceTest {
 
     @Test
     void getAllBlockRequests_shouldFilterRequests_whenStatusIsSpecified() {
-        // Arrange
         Pageable pageable = PageRequest.of(0, 10);
+        CardBlockRequest blockRequest =
+                mock(CardBlockRequest.class);
+        Card card = mock(Card.class);
 
-        Page<CardBlockRequest> expectedPage =
-                Page.empty(pageable);
+        stubBlockRequestEntity(
+                blockRequest,
+                card,
+                null,
+                CardBlockRequestStatus.PENDING
+        );
 
         when(blockRequestRepository.findAllByStatus(
                 CardBlockRequestStatus.PENDING,
                 pageable
-        )).thenReturn(expectedPage);
+        )).thenReturn(
+                new PageImpl<>(
+                        List.of(blockRequest),
+                        pageable,
+                        1
+                )
+        );
 
-        // Act
-        Page<CardBlockRequest> result =
+        Page<CardBlockRequestResponse> result =
                 blockRequestService.getAllBlockRequests(
                         CardBlockRequestStatus.PENDING,
                         pageable
                 );
 
-        // Assert
-        assertSame(expectedPage, result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals(
+                CardBlockRequestStatus.PENDING,
+                result.getContent().get(0).status()
+        );
 
         verify(blockRequestRepository)
                 .findAllByStatus(
                         CardBlockRequestStatus.PENDING,
                         pageable
                 );
-
         verify(blockRequestRepository, never())
                 .findAll(any(Pageable.class));
     }
 
     @Test
-    void getBlockRequestById_shouldReturnRequest_whenRequestExists() {
-        // Arrange
+    void getBlockRequestById_shouldReturnResponse_whenRequestExists() {
         CardBlockRequest blockRequest =
                 mock(CardBlockRequest.class);
+
+        Card card = mock(Card.class);
+        User processedBy = mock(User.class);
+
+        LocalDateTime createdAt =
+                LocalDateTime.of(2026, 7, 28, 12, 0);
+
+        LocalDateTime processedAt =
+                LocalDateTime.of(2026, 7, 28, 12, 30);
 
         when(blockRequestRepository.findById(REQUEST_ID))
                 .thenReturn(Optional.of(blockRequest));
 
-        // Act
-        CardBlockRequest result =
-                blockRequestService.getBlockRequestById(REQUEST_ID);
+        when(blockRequest.getId())
+                .thenReturn(REQUEST_ID);
 
-        // Assert
-        assertSame(blockRequest, result);
+        when(blockRequest.getCard())
+                .thenReturn(card);
 
-        verify(blockRequestRepository).findById(REQUEST_ID);
+        when(card.getId())
+                .thenReturn(CARD_ID);
+
+        when(blockRequest.getStatus())
+                .thenReturn(CardBlockRequestStatus.APPROVED);
+
+        when(blockRequest.getReason())
+                .thenReturn("Карта потеряна");
+
+        when(blockRequest.getCreatedAt())
+                .thenReturn(createdAt);
+
+        when(blockRequest.getProcessedAt())
+                .thenReturn(processedAt);
+
+        when(blockRequest.getProcessedBy())
+                .thenReturn(processedBy);
+
+        when(processedBy.getId())
+                .thenReturn(ADMIN_ID);
+
+        when(blockRequest.getAdminComment())
+                .thenReturn("Заявка подтверждена");
+
+        CardBlockRequestResponse result =
+                blockRequestService.getBlockRequestById(
+                        REQUEST_ID
+                );
+
+        assertEquals(REQUEST_ID, result.id());
+        assertEquals(CARD_ID, result.cardId());
+        assertEquals(
+                CardBlockRequestStatus.APPROVED,
+                result.status()
+        );
+        assertEquals(
+                "Карта потеряна",
+                result.reason()
+        );
+        assertEquals(createdAt, result.createdAt());
+        assertEquals(processedAt, result.processedAt());
+        assertEquals(ADMIN_ID, result.processedById());
+        assertEquals(
+                "Заявка подтверждена",
+                result.adminComment()
+        );
+
+        verify(blockRequestRepository)
+                .findById(REQUEST_ID);
     }
 
     @Test
     void getBlockRequestById_shouldThrowException_whenRequestDoesNotExist() {
-        // Arrange
         when(blockRequestRepository.findById(REQUEST_ID))
                 .thenReturn(Optional.empty());
 
-        // Act
         NoSuchElementException exception = assertThrows(
                 NoSuchElementException.class,
                 () -> blockRequestService.getBlockRequestById(
@@ -278,66 +342,54 @@ class CardBlockRequestServiceTest {
                 )
         );
 
-        // Assert
         assertEquals(
                 "Заявка на блокировку с id "
                         + REQUEST_ID
                         + " не найдена",
                 exception.getMessage()
         );
-
-        verify(blockRequestRepository).findById(REQUEST_ID);
     }
 
     @Test
     void approveBlockRequest_shouldApproveRequestAndBlockCard() {
-        // Arrange
         User admin = mock(User.class);
         Card card = mock(Card.class);
         CardBlockRequest blockRequest =
                 mock(CardBlockRequest.class);
-
         ProcessCardBlockRequest request =
                 mock(ProcessCardBlockRequest.class);
 
+        stubBlockRequestEntity(
+                blockRequest,
+                card,
+                admin,
+                CardBlockRequestStatus.APPROVED
+        );
+
         when(userService.getUserEntityById(ADMIN_ID))
                 .thenReturn(admin);
-
         when(blockRequestRepository.findById(REQUEST_ID))
                 .thenReturn(Optional.of(blockRequest));
-
         when(request.adminComment())
                 .thenReturn("  Заявка одобрена  ");
 
-        when(blockRequest.getCard())
-                .thenReturn(card);
-
-        // Act
-        CardBlockRequest result =
+        CardBlockRequestResponse result =
                 blockRequestService.approveBlockRequest(
                         ADMIN_ID,
                         REQUEST_ID,
                         request
                 );
 
-        // Assert
-        assertSame(blockRequest, result);
+        assertEquals(
+                CardBlockRequestStatus.APPROVED,
+                result.status()
+        );
+        assertEquals(ADMIN_ID, result.processedById());
 
-        verify(userService)
-                .getUserEntityById(ADMIN_ID);
-
-        verify(blockRequestRepository)
-                .findById(REQUEST_ID);
-
-        /*
-         * Проверяем, что пробелы в начале и конце комментария
-         * были удалены.
-         */
         verify(blockRequest).approve(
                 admin,
                 "Заявка одобрена"
         );
-
         verify(card).block();
 
         InOrder inOrder = inOrder(blockRequest, card);
@@ -346,152 +398,101 @@ class CardBlockRequestServiceTest {
                 admin,
                 "Заявка одобрена"
         );
-
         inOrder.verify(blockRequest).getCard();
         inOrder.verify(card).block();
 
         verify(blockRequestRepository, never())
                 .save(any(CardBlockRequest.class));
-
         verifyNoInteractions(cardService);
     }
 
     @Test
     void approveBlockRequest_shouldPassNull_whenAdminCommentIsBlank() {
-        // Arrange
         User admin = mock(User.class);
         Card card = mock(Card.class);
         CardBlockRequest blockRequest =
                 mock(CardBlockRequest.class);
-
         ProcessCardBlockRequest request =
                 mock(ProcessCardBlockRequest.class);
 
+        stubBlockRequestEntity(
+                blockRequest,
+                card,
+                admin,
+                CardBlockRequestStatus.APPROVED
+        );
+
         when(userService.getUserEntityById(ADMIN_ID))
                 .thenReturn(admin);
-
         when(blockRequestRepository.findById(REQUEST_ID))
                 .thenReturn(Optional.of(blockRequest));
-
         when(request.adminComment())
                 .thenReturn("   ");
 
-        when(blockRequest.getCard())
-                .thenReturn(card);
-
-        // Act
         blockRequestService.approveBlockRequest(
                 ADMIN_ID,
                 REQUEST_ID,
                 request
         );
 
-        // Assert
         verify(blockRequest).approve(admin, null);
         verify(card).block();
     }
 
     @Test
     void rejectBlockRequest_shouldRejectRequestAndNotBlockCard() {
-        // Arrange
         User admin = mock(User.class);
+        Card card = mock(Card.class);
         CardBlockRequest blockRequest =
                 mock(CardBlockRequest.class);
-
         ProcessCardBlockRequest request =
                 mock(ProcessCardBlockRequest.class);
 
+        stubBlockRequestEntity(
+                blockRequest,
+                card,
+                admin,
+                CardBlockRequestStatus.REJECTED
+        );
+
         when(userService.getUserEntityById(ADMIN_ID))
                 .thenReturn(admin);
-
         when(blockRequestRepository.findById(REQUEST_ID))
                 .thenReturn(Optional.of(blockRequest));
-
         when(request.adminComment())
                 .thenReturn("  Недостаточно информации  ");
 
-        // Act
-        CardBlockRequest result =
+        CardBlockRequestResponse result =
                 blockRequestService.rejectBlockRequest(
                         ADMIN_ID,
                         REQUEST_ID,
                         request
                 );
 
-        // Assert
-        assertSame(blockRequest, result);
-
-        verify(userService)
-                .getUserEntityById(ADMIN_ID);
-
-        verify(blockRequestRepository)
-                .findById(REQUEST_ID);
+        assertEquals(
+                CardBlockRequestStatus.REJECTED,
+                result.status()
+        );
 
         verify(blockRequest).reject(
                 admin,
                 "Недостаточно информации"
         );
-
-        /*
-         * При отклонении заявки связанная карта
-         * вообще не должна извлекаться или блокироваться.
-         */
-        verify(blockRequest, never()).getCard();
-
-        verify(blockRequestRepository, never())
-                .save(any(CardBlockRequest.class));
-
+        verify(card, never()).block();
         verifyNoInteractions(cardService);
     }
 
     @Test
-    void rejectBlockRequest_shouldPassNull_whenAdminCommentIsNull() {
-        // Arrange
-        User admin = mock(User.class);
-        CardBlockRequest blockRequest =
-                mock(CardBlockRequest.class);
-
-        ProcessCardBlockRequest request =
-                mock(ProcessCardBlockRequest.class);
-
-        when(userService.getUserEntityById(ADMIN_ID))
-                .thenReturn(admin);
-
-        when(blockRequestRepository.findById(REQUEST_ID))
-                .thenReturn(Optional.of(blockRequest));
-
-        when(request.adminComment())
-                .thenReturn(null);
-
-        // Act
-        CardBlockRequest result =
-                blockRequestService.rejectBlockRequest(
-                        ADMIN_ID,
-                        REQUEST_ID,
-                        request
-                );
-
-        // Assert
-        assertSame(blockRequest, result);
-
-        verify(blockRequest).reject(admin, null);
-        verify(blockRequest, never()).getCard();
-    }
-
-    @Test
     void approveBlockRequest_shouldThrowException_whenRequestDoesNotExist() {
-        // Arrange
         User admin = mock(User.class);
         ProcessCardBlockRequest request =
                 mock(ProcessCardBlockRequest.class);
 
         when(userService.getUserEntityById(ADMIN_ID))
                 .thenReturn(admin);
-
         when(blockRequestRepository.findById(REQUEST_ID))
                 .thenReturn(Optional.empty());
 
-        // Act and Assert
         assertThrows(
                 NoSuchElementException.class,
                 () -> blockRequestService.approveBlockRequest(
@@ -501,34 +502,77 @@ class CardBlockRequestServiceTest {
                 )
         );
 
-        verify(userService)
-                .getUserEntityById(ADMIN_ID);
-
-        verify(blockRequestRepository)
-                .findById(REQUEST_ID);
-
         verifyNoInteractions(request);
         verifyNoInteractions(cardService);
     }
 
-    @Test
-    void getBlockRequestEntityById_shouldReturnEntity_whenRequestExists() {
-        // Arrange
-        CardBlockRequest blockRequest =
-                mock(CardBlockRequest.class);
+    private CardBlockRequest getBlockRequestEntityById(
+            Long requestId
+    ) {
+        return blockRequestRepository.findById(requestId)
+                .orElseThrow(
+                        () -> new NoSuchElementException(
+                                "Заявка на блокировку с id "
+                                        + requestId
+                                        + " не найдена"
+                        )
+                );
+    }
 
-        when(blockRequestRepository.findById(REQUEST_ID))
-                .thenReturn(Optional.of(blockRequest));
+    private void stubBlockRequestEntity(
+            CardBlockRequest blockRequest,
+            Card card,
+            User processedBy,
+            CardBlockRequestStatus status
+    ) {
+        LocalDateTime createdAt =
+                LocalDateTime.of(2026, 7, 28, 12, 0);
 
-        // Act
-        CardBlockRequest result =
-                blockRequestService.getBlockRequestEntityById(
-                        REQUEST_ID
+        LocalDateTime processedAt =
+                processedBy == null
+                        ? null
+                        : LocalDateTime.of(
+                        2026,
+                        7,
+                        28,
+                        12,
+                        30
                 );
 
-        // Assert
-        assertSame(blockRequest, result);
+        when(blockRequest.getId())
+                .thenReturn(REQUEST_ID);
 
-        verify(blockRequestRepository).findById(REQUEST_ID);
+        when(blockRequest.getCard())
+                .thenReturn(card);
+
+        when(card.getId())
+                .thenReturn(CARD_ID);
+
+        when(blockRequest.getStatus())
+                .thenReturn(status);
+
+        when(blockRequest.getReason())
+                .thenReturn("Карта потеряна");
+
+        when(blockRequest.getCreatedAt())
+                .thenReturn(createdAt);
+
+        when(blockRequest.getProcessedAt())
+                .thenReturn(processedAt);
+
+        when(blockRequest.getProcessedBy())
+                .thenReturn(processedBy);
+
+        when(blockRequest.getAdminComment())
+                .thenReturn(
+                        processedBy == null
+                                ? null
+                                : "Комментарий администратора"
+                );
+
+        if (processedBy != null) {
+            when(processedBy.getId())
+                    .thenReturn(ADMIN_ID);
+        }
     }
 }

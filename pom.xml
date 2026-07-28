@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.example</groupId>
-    <artifactId>demo</artifactId>
+    <artifactId>bank-card-management</artifactId>
+    <name>Bank Card Management System</name>
+    <description>REST API for managing users and bank cards</description>
     <version>0.0.1-SNAPSHOT</version>
-    <name/>
-    <description/>
     <url/>
     <licenses>
         <license/>
@@ -33,11 +33,6 @@
         <dependency>
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>

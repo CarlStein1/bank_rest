@@ -11,7 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
@@ -154,11 +154,20 @@ class UserControllerTest {
                 UserRole.ADMIN
         );
 
-        Page<UserResponse> serviceResponse =
-                new PageImpl<>(List.of(firstUser, secondUser));
+        List<UserResponse> users =
+                List.of(firstUser, secondUser);
 
         when(userService.getAllUsers(any(Pageable.class)))
-                .thenReturn(serviceResponse);
+                .thenAnswer(invocation -> {
+                    Pageable pageable =
+                            invocation.getArgument(0);
+
+                    return new PageImpl<>(
+                            users,
+                            pageable,
+                            users.size()
+                    );
+                });
 
         // Act and Assert
         mockMvc.perform(
@@ -176,6 +185,7 @@ class UserControllerTest {
                 )
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content.length()").value(2))
+
                 .andExpect(jsonPath("$.content[0].id").value(1))
                 .andExpect(
                         jsonPath("$.content[0].login")
@@ -185,6 +195,7 @@ class UserControllerTest {
                         jsonPath("$.content[0].role")
                                 .value("USER")
                 )
+
                 .andExpect(jsonPath("$.content[1].id").value(2))
                 .andExpect(
                         jsonPath("$.content[1].login")
@@ -193,6 +204,17 @@ class UserControllerTest {
                 .andExpect(
                         jsonPath("$.content[1].role")
                                 .value("ADMIN")
+                )
+
+                .andExpect(jsonPath("$.page.number").value(0))
+                .andExpect(jsonPath("$.page.size").value(10))
+                .andExpect(
+                        jsonPath("$.page.totalElements")
+                                .value(2)
+                )
+                .andExpect(
+                        jsonPath("$.page.totalPages")
+                                .value(1)
                 );
 
         ArgumentCaptor<Pageable> pageableCaptor =
@@ -205,20 +227,26 @@ class UserControllerTest {
         Pageable capturedPageable =
                 pageableCaptor.getValue();
 
-        assertEquals(0, capturedPageable.getPageNumber());
-        assertEquals(10, capturedPageable.getPageSize());
-
-        assertNotNull(
-                capturedPageable.getSort().getOrderFor("id")
+        assertEquals(
+                0,
+                capturedPageable.getPageNumber()
         );
 
         assertEquals(
-                "DESC",
+                10,
+                capturedPageable.getPageSize()
+        );
+
+        Sort.Order idOrder =
                 capturedPageable
                         .getSort()
-                        .getOrderFor("id")
-                        .getDirection()
-                        .name()
+                        .getOrderFor("id");
+
+        assertNotNull(idOrder);
+
+        assertEquals(
+                Sort.Direction.DESC,
+                idOrder.getDirection()
         );
     }
 
