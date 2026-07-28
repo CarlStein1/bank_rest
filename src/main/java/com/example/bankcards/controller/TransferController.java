@@ -4,6 +4,9 @@ import com.example.bankcards.dto.request.TransferRequest;
 import com.example.bankcards.dto.response.TransferResponse;
 import com.example.bankcards.security.UserPrincipal;
 import com.example.bankcards.service.TransferService;
+import com.example.bankcards.dto.response.ApiErrorResponse;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -40,30 +43,74 @@ public class TransferController {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Перевод успешно выполнен"
+                    description =
+                            "Перевод успешно выполнен"
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Некорректная сумма или выбрана одна и та же карта"
+                    description = """
+                        Некорректная сумма или выбрана
+                        одна и та же карта
+                        """,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation =
+                                            ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "Пользователь не авторизован"
+                    description =
+                            "Пользователь не авторизован",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation =
+                                            ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Одна из карт принадлежит другому пользователю"
+                    description = """
+                        Одна из карт принадлежит
+                        другому пользователю
+                        """,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation =
+                                            ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Одна из карт не найдена"
+                    description =
+                            "Одна из карт не найдена",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation =
+                                            ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "409",
                     description = """
-                            Недостаточно средств, карта заблокирована
-                            или срок её действия истёк
-                            """
+                        Недостаточно средств, карта заблокирована
+                        или срок её действия истёк
+                        """,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation =
+                                            ApiErrorResponse.class
+                            )
+                    )
             )
     })
     public ResponseEntity<TransferResponse> transfer(

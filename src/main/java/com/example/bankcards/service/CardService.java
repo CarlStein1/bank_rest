@@ -3,6 +3,7 @@ package com.example.bankcards.service;
 import com.example.bankcards.dto.response.CardResponse;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.User;
+import com.example.bankcards.entity.enums.CardStatus;
 import com.example.bankcards.exception.CardAccessDeniedException;
 import com.example.bankcards.exception.CardNotFoundException;
 import com.example.bankcards.repository.CardRepository;
@@ -75,13 +76,48 @@ public class CardService {
 
     public Page<CardResponse> getUserCards(
             Long userId,
+            String lastFour,
+            CardStatus status,
             Pageable pageable
     ) {
-        return cardRepository.findAllByUser_Id(
-                        userId,
-                        pageable
-                )
-                .map(this::toResponse);
+        String normalizedLastFour =
+                normalizeLastFour(lastFour);
+
+        Page<Card> cards;
+
+        if (normalizedLastFour != null && status != null) {
+            cards =
+                    cardRepository
+                            .findAllByUser_IdAndNumberLastFourAndStatus(
+                                    userId,
+                                    normalizedLastFour,
+                                    status,
+                                    pageable
+                            );
+        } else if (normalizedLastFour != null) {
+            cards =
+                    cardRepository
+                            .findAllByUser_IdAndNumberLastFour(
+                                    userId,
+                                    normalizedLastFour,
+                                    pageable
+                            );
+        } else if (status != null) {
+            cards =
+                    cardRepository.findAllByUser_IdAndStatus(
+                            userId,
+                            status,
+                            pageable
+                    );
+        } else {
+            cards =
+                    cardRepository.findAllByUser_Id(
+                            userId,
+                            pageable
+                    );
+        }
+
+        return cards.map(this::toResponse);
     }
 
     public CardResponse getUserCard(
@@ -145,6 +181,25 @@ public class CardService {
         }
 
         return card;
+    }
+
+    private String normalizeLastFour(
+            String lastFour
+    ) {
+        if (lastFour == null || lastFour.isBlank()) {
+            return null;
+        }
+
+        String normalized = lastFour.trim();
+
+        if (!normalized.matches("\\d{4}")) {
+            throw new IllegalArgumentException(
+                    "Последние четыре цифры карты должны "
+                            + "состоять ровно из 4 цифр"
+            );
+        }
+
+        return normalized;
     }
 
     private CardResponse toResponse(Card card) {

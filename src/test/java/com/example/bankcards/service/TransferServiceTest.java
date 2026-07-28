@@ -5,6 +5,7 @@ import com.example.bankcards.dto.response.TransferResponse;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.User;
 import com.example.bankcards.entity.enums.CardStatus;
+import com.example.bankcards.exception.CardExpiredException;
 import com.example.bankcards.exception.CardAccessDeniedException;
 import com.example.bankcards.exception.CardBlockedException;
 import com.example.bankcards.exception.InsufficientFundsException;
@@ -266,8 +267,8 @@ class TransferServiceTest {
                 .thenReturn(CardStatus.EXPIRED);
 
         // Act
-        IllegalStateException exception = assertThrows(
-                IllegalStateException.class,
+        CardExpiredException exception = assertThrows(
+                CardExpiredException.class,
                 () -> transferService.transfer(USER_ID, request)
         );
 
@@ -294,8 +295,8 @@ class TransferServiceTest {
                 .thenReturn(LocalDate.now().minusDays(1));
 
         // Act
-        IllegalStateException exception = assertThrows(
-                IllegalStateException.class,
+        CardExpiredException exception = assertThrows(
+                CardExpiredException.class,
                 () -> transferService.transfer(USER_ID, request)
         );
 
@@ -324,8 +325,8 @@ class TransferServiceTest {
                 .thenReturn(LocalDate.now().minusDays(1));
 
         // Act
-        IllegalStateException exception = assertThrows(
-                IllegalStateException.class,
+        CardExpiredException exception = assertThrows(
+                CardExpiredException.class,
                 () -> transferService.transfer(USER_ID, request)
         );
 

@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -113,20 +114,23 @@ class CardControllerTest {
     void getAllCards_shouldReturnOkAndPageOfCards()
             throws Exception {
 
+        // Arrange
         CardResponse card = activeCardResponse();
 
         Pageable servicePageable =
                 PageRequest.of(0, 10);
 
-        Page<CardResponse> page = new PageImpl<>(
-                List.of(card),
-                servicePageable,
-                1
-        );
+        Page<CardResponse> page =
+                new PageImpl<>(
+                        List.of(card),
+                        servicePageable,
+                        1
+                );
 
         when(cardService.getAllCards(any(Pageable.class)))
                 .thenReturn(page);
 
+        // Act and Assert
         mockMvc.perform(
                         get("/api/admin/cards")
                                 .param("page", "0")
@@ -143,7 +147,26 @@ class CardControllerTest {
                 )
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content.length()").value(1))
-                .andExpect(jsonPath("$.content[0]").isMap());
+                .andExpect(jsonPath("$.content[0].id").value(CARD_ID))
+                .andExpect(jsonPath("$.content[0].userId").value(USER_ID))
+                .andExpect(
+                        jsonPath("$.content[0].maskedNumber")
+                                .value("**** **** **** 3456")
+                )
+                .andExpect(
+                        jsonPath("$.content[0].status")
+                                .value("ACTIVE")
+                )
+                .andExpect(jsonPath("$.page.number").value(0))
+                .andExpect(jsonPath("$.page.size").value(10))
+                .andExpect(
+                        jsonPath("$.page.totalElements")
+                                .value(1)
+                )
+                .andExpect(
+                        jsonPath("$.page.totalPages")
+                                .value(1)
+                );
 
         ArgumentCaptor<Pageable> pageableCaptor =
                 ArgumentCaptor.forClass(Pageable.class);
@@ -283,33 +306,34 @@ class CardControllerTest {
         verify(cardService).deleteCard(CARD_ID);
     }
 
-    // -------------------------------------------------------------------------
-    // Операции пользователя
-    // -------------------------------------------------------------------------
-
     @Test
     void getMyCards_shouldReturnOkAndPassPrincipalIdToService()
             throws Exception {
 
+        // Arrange
         CardResponse card = activeCardResponse();
 
         Pageable servicePageable =
                 PageRequest.of(0, 5);
 
-        Page<CardResponse> page = new PageImpl<>(
-                List.of(card),
-                servicePageable,
-                1
-        );
+        Page<CardResponse> page =
+                new PageImpl<>(
+                        List.of(card),
+                        servicePageable,
+                        1
+                );
 
         when(principal.getId())
                 .thenReturn(USER_ID);
 
         when(cardService.getUserCards(
                 eq(USER_ID),
+                isNull(),
+                isNull(),
                 any(Pageable.class)
         )).thenReturn(page);
 
+        // Act and Assert
         mockMvc.perform(
                         get("/api/cards")
                                 .param("page", "0")
@@ -325,13 +349,34 @@ class CardControllerTest {
                 )
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content.length()").value(1))
-                .andExpect(jsonPath("$.content[0]").isMap());
+                .andExpect(jsonPath("$.content[0].id").value(CARD_ID))
+                .andExpect(jsonPath("$.content[0].userId").value(USER_ID))
+                .andExpect(
+                        jsonPath("$.content[0].maskedNumber")
+                                .value("**** **** **** 3456")
+                )
+                .andExpect(
+                        jsonPath("$.content[0].status")
+                                .value("ACTIVE")
+                )
+                .andExpect(jsonPath("$.page.number").value(0))
+                .andExpect(jsonPath("$.page.size").value(5))
+                .andExpect(
+                        jsonPath("$.page.totalElements")
+                                .value(1)
+                )
+                .andExpect(
+                        jsonPath("$.page.totalPages")
+                                .value(1)
+                );
 
         ArgumentCaptor<Pageable> pageableCaptor =
                 ArgumentCaptor.forClass(Pageable.class);
 
         verify(cardService).getUserCards(
                 eq(USER_ID),
+                isNull(),
+                isNull(),
                 pageableCaptor.capture()
         );
 
@@ -346,6 +391,93 @@ class CardControllerTest {
         assertEquals(
                 5,
                 capturedPageable.getPageSize()
+        );
+
+        verify(principal).getId();
+    }
+
+    @Test
+    void getMyCards_shouldPassSearchAndStatusToService()
+            throws Exception {
+
+        // Arrange
+        CardResponse card =
+                activeCardResponse();
+
+        Pageable servicePageable =
+                PageRequest.of(0, 10);
+
+        Page<CardResponse> page =
+                new PageImpl<>(
+                        List.of(card),
+                        servicePageable,
+                        1
+                );
+
+        when(principal.getId())
+                .thenReturn(USER_ID);
+
+        when(cardService.getUserCards(
+                eq(USER_ID),
+                eq("3456"),
+                eq(CardStatus.ACTIVE),
+                any(Pageable.class)
+        )).thenReturn(page);
+
+        // Act and Assert
+        mockMvc.perform(
+                        get("/api/cards")
+                                .param("lastFour", "3456")
+                                .param("status", "ACTIVE")
+                                .param("page", "0")
+                                .param("size", "10")
+                                .param("sort", "id,desc")
+                                .accept(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(
+                        content().contentTypeCompatibleWith(
+                                MediaType.APPLICATION_JSON
+                        )
+                )
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(
+                        jsonPath("$.content.length()")
+                                .value(1)
+                )
+                .andExpect(
+                        jsonPath("$.content[0].maskedNumber")
+                                .value("**** **** **** 3456")
+                )
+                .andExpect(
+                        jsonPath("$.content[0].status")
+                                .value("ACTIVE")
+                );
+
+        ArgumentCaptor<Pageable> pageableCaptor =
+                ArgumentCaptor.forClass(Pageable.class);
+
+        verify(cardService).getUserCards(
+                eq(USER_ID),
+                eq("3456"),
+                eq(CardStatus.ACTIVE),
+                pageableCaptor.capture()
+        );
+
+        Pageable pageable =
+                pageableCaptor.getValue();
+
+        assertEquals(0, pageable.getPageNumber());
+        assertEquals(10, pageable.getPageSize());
+
+        Sort.Order idOrder =
+                pageable.getSort().getOrderFor("id");
+
+        assertNotNull(idOrder);
+        assertEquals(
+                Sort.Direction.DESC,
+                idOrder.getDirection()
         );
 
         verify(principal).getId();

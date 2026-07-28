@@ -3,6 +3,9 @@ package com.example.bankcards.controller;
 import com.example.bankcards.dto.request.LoginRequest;
 import com.example.bankcards.dto.response.AuthResponse;
 import com.example.bankcards.service.AuthService;
+import com.example.bankcards.dto.response.ApiErrorResponse;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -35,19 +38,44 @@ public class AuthController {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Авторизация выполнена успешно"
+                    description =
+                            "Авторизация выполнена успешно"
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Некорректные входные данные"
+                    description =
+                            "Некорректные входные данные",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation =
+                                            ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "Неверный логин или пароль"
+                    description =
+                            "Неверный логин или пароль",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation =
+                                            ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "500",
-                    description = "Внутренняя ошибка сервера"
+                    description =
+                            "Внутренняя ошибка сервера",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation =
+                                            ApiErrorResponse.class
+                            )
+                    )
             )
     })
     public ResponseEntity<AuthResponse> login(

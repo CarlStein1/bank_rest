@@ -77,7 +77,10 @@ public class GlobalExceptionHandler {
             CardBlockedException.class,
             DuplicateBlockRequestException.class,
             LoginAlreadyExistsException.class,
-            IllegalStateException.class
+            CardAlreadyBlockedException.class,
+            CardAlreadyActiveException.class,
+            CardExpiredException.class,
+            CardBlockRequestAlreadyProcessedException.class
     })
     public ResponseEntity<ApiErrorResponse> handleConflict(
             RuntimeException exception,

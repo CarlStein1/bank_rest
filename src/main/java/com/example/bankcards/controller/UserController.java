@@ -57,6 +57,16 @@ public class UserController {
                     )
             ),
             @ApiResponse(
+                    responseCode = "401",
+                    description = "Пользователь не авторизован",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
+            ),
+            @ApiResponse(
                     responseCode = "403",
                     description = "Недостаточно прав для выполнения операции",
                     content = @Content(
@@ -96,6 +106,16 @@ public class UserController {
                     description = "Список пользователей успешно получен"
             ),
             @ApiResponse(
+                    responseCode = "401",
+                    description = "Пользователь не авторизован",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
+            ),
+            @ApiResponse(
                     responseCode = "403",
                     description = "Недостаточно прав для выполнения операции",
                     content = @Content(
@@ -125,6 +145,16 @@ public class UserController {
             @ApiResponse(
                     responseCode = "200",
                     description = "Пользователь найден"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Пользователь не авторизован",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "404",
@@ -177,6 +207,16 @@ public class UserController {
                     )
             ),
             @ApiResponse(
+                    responseCode = "401",
+                    description = "Пользователь не авторизован",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
+            ),
+            @ApiResponse(
                     responseCode = "404",
                     description = "Пользователь не найден",
                     content = @Content(
@@ -218,6 +258,16 @@ public class UserController {
             @ApiResponse(
                     responseCode = "204",
                     description = "Пользователь успешно удалён"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Пользователь не авторизован",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "404",

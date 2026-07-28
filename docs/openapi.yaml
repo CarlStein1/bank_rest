@@ -46,6 +46,12 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/UserResponse"
+        "401":
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
           description: Пользователь не найден
           content:
@@ -94,6 +100,12 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
           description: Пользователь не найден
           content:
@@ -126,6 +138,12 @@ paths:
       responses:
         "204":
           description: Пользователь успешно удалён
+        "401":
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
           description: Пользователь не найден
           content:
@@ -163,37 +181,41 @@ paths:
               schema:
                 $ref: "#/components/schemas/TransferResponse"
         "400":
-          description: Некорректная сумма или выбрана одна и та же карта
+          description: |
+            Некорректная сумма или выбрана
+            одна и та же карта
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/TransferResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "401":
           description: Пользователь не авторизован
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/TransferResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "403":
-          description: Одна из карт принадлежит другому пользователю
+          description: |
+            Одна из карт принадлежит
+            другому пользователю
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/TransferResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
           description: Одна из карт не найдена
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/TransferResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "409":
           description: |
             Недостаточно средств, карта заблокирована
             или срок её действия истёк
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/TransferResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearerAuth: []
   /api/cards/{cardId}/block-requests:
@@ -224,41 +246,43 @@ paths:
         "201":
           description: Заявка успешно создана
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/CardBlockRequestResponse"
         "400":
           description: Переданы некорректные данные
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardBlockRequestResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "401":
           description: Пользователь не авторизован
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardBlockRequestResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "403":
-          description: Карта принадлежит другому пользователю
+          description: |
+            Карта принадлежит другому пользователю
+            или у пользователя недостаточно прав
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardBlockRequestResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
           description: Карта не найдена
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardBlockRequestResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "409":
           description: |
             Карта уже заблокирована
             или активная заявка уже существует
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardBlockRequestResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearerAuth: []
   /api/auth/login:
@@ -287,21 +311,21 @@ paths:
         "400":
           description: Некорректные входные данные
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/AuthResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "401":
           description: Неверный логин или пароль
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/AuthResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "500":
           description: Внутренняя ошибка сервера
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/AuthResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
   /api/admin/users:
     get:
       tags:
@@ -342,6 +366,12 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/PagedModelUserResponse"
+        "401":
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "403":
           description: Недостаточно прав для выполнения операции
           content:
@@ -375,6 +405,12 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "403":
           description: Недостаточно прав для выполнения операции
           content:
@@ -394,7 +430,9 @@ paths:
       tags:
       - Карты
       summary: Создать карту
-      description: Создаёт новую банковскую карту для указанного пользователя
+      description: |
+        Создаёт новую банковскую карту
+        для указанного пользователя.
       operationId: createCard
       parameters:
       - name: userId
@@ -409,21 +447,27 @@ paths:
         "201":
           description: Карта успешно создана
           content:
-            '*/*':
+            application/json:
               schema:
                 $ref: "#/components/schemas/CardResponse"
+        "401":
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "403":
           description: Недостаточно прав
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
           description: Пользователь не найден
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearerAuth: []
   /api/admin/cards/{cardId}/block:
@@ -449,18 +493,32 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/CardResponse"
+        "401":
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "403":
           description: Недостаточно прав
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
           description: Карта не найдена
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "409":
+          description: |
+            Карта уже заблокирована
+            или срок её действия истёк
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearerAuth: []
   /api/admin/cards/{cardId}/activate:
@@ -486,18 +544,32 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/CardResponse"
+        "401":
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "403":
           description: Недостаточно прав
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
           description: Карта не найдена
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "409":
+          description: |
+            Карта уже активна
+            или срок её действия истёк
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearerAuth: []
   /api/admin/block-requests/{requestId}/reject:
@@ -534,27 +606,35 @@ paths:
         "400":
           description: Переданы некорректные данные
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardBlockRequestResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "403":
           description: Недостаточно прав
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardBlockRequestResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
-          description: Заявка не найдена
+          description: |
+            Заявка или администратор
+            не найдены
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardBlockRequestResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "409":
           description: Заявка уже была обработана
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardBlockRequestResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearerAuth: []
   /api/admin/block-requests/{requestId}/approve:
@@ -563,7 +643,8 @@ paths:
       - Заявки на блокировку карт
       summary: Подтвердить заявку
       description: |
-        Подтверждает заявку и блокирует связанную с ней карту.
+        Подтверждает заявку и блокирует
+        связанную с ней карту.
       operationId: approveBlockRequest
       parameters:
       - name: requestId
@@ -582,7 +663,9 @@ paths:
         required: true
       responses:
         "200":
-          description: "Заявка подтверждена, карта заблокирована"
+          description: |
+            Заявка подтверждена,
+            карта заблокирована
           content:
             '*/*':
               schema:
@@ -590,27 +673,37 @@ paths:
         "400":
           description: Переданы некорректные данные
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardBlockRequestResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "403":
           description: Недостаточно прав
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardBlockRequestResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
-          description: Заявка не найдена
+          description: |
+            Заявка, карта или администратор
+            не найдены
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardBlockRequestResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "409":
-          description: Заявка уже была обработана
+          description: |
+            Заявка уже была обработана
+            или карта не может быть заблокирована
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardBlockRequestResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearerAuth: []
   /api/cards:
@@ -620,9 +713,33 @@ paths:
       summary: Получить свои карты
       description: |
         Возвращает страницу банковских карт,
-        принадлежащих текущему авторизованному пользователю.
+        принадлежащих текущему пользователю.
+
+        Поддерживает поиск по последним четырём
+        цифрам номера карты, фильтрацию по статусу,
+        пагинацию и сортировку.
       operationId: getMyCards
       parameters:
+      - name: lastFour
+        in: query
+        description: |
+          Последние четыре цифры номера карты.
+          Должны состоять ровно из четырёх цифр.
+        required: false
+        schema:
+          type: string
+        example: 3456
+      - name: status
+        in: query
+        description: Статус карты
+        required: false
+        schema:
+          type: string
+          enum:
+          - ACTIVE
+          - BLOCKED
+          - EXPIRED
+        example: ACTIVE
       - name: page
         in: query
         description: Zero-based page index (0..N)
@@ -654,13 +771,27 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/PageCardResponse"
+                $ref: "#/components/schemas/PagedModelCardResponse"
+        "400":
+          description: |
+            Некорректные последние четыре цифры
+            или значение статуса карты
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "401":
           description: Пользователь не авторизован
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/PageCardResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
+          description: Недостаточно прав
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearerAuth: []
   /api/cards/{cardId}:
@@ -691,21 +822,21 @@ paths:
         "401":
           description: Пользователь не авторизован
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "403":
           description: Нет доступа к чужой карте
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
           description: Карта не найдена
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearerAuth: []
   /api/cards/{cardId}/balance:
@@ -736,21 +867,21 @@ paths:
         "401":
           description: Пользователь не авторизован
           content:
-            '*/*':
+            application/json:
               schema:
-                type: number
+                $ref: "#/components/schemas/ApiErrorResponse"
         "403":
           description: Нет доступа к чужой карте
           content:
-            '*/*':
+            application/json:
               schema:
-                type: number
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
           description: Карта не найдена
           content:
-            '*/*':
+            application/json:
               schema:
-                type: number
+                $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearerAuth: []
   /api/admin/cards:
@@ -792,13 +923,19 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/PageCardResponse"
+                $ref: "#/components/schemas/PagedModelCardResponse"
+        "401":
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "403":
           description: Недостаточно прав
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/PageCardResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearerAuth: []
   /api/admin/cards/{cardId}:
@@ -806,7 +943,9 @@ paths:
       tags:
       - Карты
       summary: Получить карту
-      description: Возвращает банковскую карту по её идентификатору
+      description: |
+        Возвращает банковскую карту
+        по её идентификатору.
       operationId: getCardById
       parameters:
       - name: cardId
@@ -824,25 +963,33 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/CardResponse"
+        "401":
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "403":
           description: Недостаточно прав
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
           description: Карта не найдена
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearerAuth: []
     delete:
       tags:
       - Карты
       summary: Удалить карту
-      description: Удаляет банковскую карту по её идентификатору
+      description: |
+        Удаляет банковскую карту
+        по её идентификатору.
       operationId: deleteCard
       parameters:
       - name: cardId
@@ -856,10 +1003,24 @@ paths:
       responses:
         "204":
           description: Карта успешно удалена
+        "401":
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "403":
           description: Недостаточно прав
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
           description: Карта не найдена
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearerAuth: []
   /api/admin/block-requests:
@@ -915,18 +1076,24 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/PagedModelCardBlockRequestResponse"
+        "400":
+          description: Передано неизвестное значение статуса
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "401":
           description: Пользователь не авторизован
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/PagedModelCardBlockRequestResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "403":
           description: Недостаточно прав
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/PagedModelCardBlockRequestResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearerAuth: []
   /api/admin/block-requests/{requestId}:
@@ -934,7 +1101,9 @@ paths:
       tags:
       - Заявки на блокировку карт
       summary: Получить заявку
-      description: Возвращает заявку на блокировку по идентификатору
+      description: |
+        Возвращает заявку на блокировку
+        по её идентификатору.
       operationId: getBlockRequestById
       parameters:
       - name: requestId
@@ -952,18 +1121,24 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/CardBlockRequestResponse"
+        "401":
+          description: Пользователь не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrorResponse"
         "403":
           description: Недостаточно прав
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardBlockRequestResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
         "404":
           description: Заявка не найдена
           content:
-            '*/*':
+            application/json:
               schema:
-                $ref: "#/components/schemas/CardBlockRequestResponse"
+                $ref: "#/components/schemas/ApiErrorResponse"
       security:
       - bearerAuth: []
 components:
@@ -1003,20 +1178,21 @@ components:
       - role
     ApiErrorResponse:
       type: object
-      description: Возникновение ошибки при запросе на сервер
+      description: Единый формат ошибки REST API
       properties:
         timestamp:
           type: string
           format: date-time
           description: Время возникновения ошибки
+          example: 2026-07-28T19:34:52.426
         status:
           type: integer
           format: int32
-          description: Статус ошибки
+          description: HTTP-статус ошибки
           example: 404
         error:
           type: string
-          description: Наименование ошибки
+          description: Наименование HTTP-ошибки
           example: Not Found
         message:
           type: string
@@ -1266,65 +1442,6 @@ components:
           example: "Заявка одобрена, карта заблокирована"
           maxLength: 500
           minLength: 0
-    PageCardResponse:
-      type: object
-      properties:
-        totalElements:
-          type: integer
-          format: int64
-        totalPages:
-          type: integer
-          format: int32
-        first:
-          type: boolean
-        last:
-          type: boolean
-        size:
-          type: integer
-          format: int32
-        content:
-          type: array
-          items:
-            $ref: "#/components/schemas/CardResponse"
-        number:
-          type: integer
-          format: int32
-        sort:
-          $ref: "#/components/schemas/SortObject"
-        numberOfElements:
-          type: integer
-          format: int32
-        pageable:
-          $ref: "#/components/schemas/PageableObject"
-        empty:
-          type: boolean
-    PageableObject:
-      type: object
-      properties:
-        offset:
-          type: integer
-          format: int64
-        sort:
-          $ref: "#/components/schemas/SortObject"
-        paged:
-          type: boolean
-        pageSize:
-          type: integer
-          format: int32
-        pageNumber:
-          type: integer
-          format: int32
-        unpaged:
-          type: boolean
-    SortObject:
-      type: object
-      properties:
-        empty:
-          type: boolean
-        sorted:
-          type: boolean
-        unsorted:
-          type: boolean
     PageMetadata:
       type: object
       properties:
@@ -1340,6 +1457,15 @@ components:
         totalPages:
           type: integer
           format: int64
+    PagedModelCardResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/CardResponse"
+        page:
+          $ref: "#/components/schemas/PageMetadata"
     PagedModelUserResponse:
       type: object
       properties:

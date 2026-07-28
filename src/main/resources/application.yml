@@ -6,9 +6,9 @@ spring:
     name: bank-card-management
 
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/bank_card_management}
-    username: ${DB_USERNAME:bank_user}
-    password: ${DB_PASSWORD:bank_password}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   sql:
@@ -40,6 +40,7 @@ app:
 
     card-encryption:
       key: ${CARD_ENCRYPTION_KEY}
+      key-version: ${CARD_ENCRYPTION_KEY_VERSION:1}
 
 springdoc:
   api-docs:

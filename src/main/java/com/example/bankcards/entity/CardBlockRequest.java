@@ -1,6 +1,7 @@
 package com.example.bankcards.entity;
 
 import com.example.bankcards.entity.enums.CardBlockRequestStatus;
+import com.example.bankcards.exception.CardBlockRequestAlreadyProcessedException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -91,9 +92,7 @@ public class CardBlockRequest {
 
     private void ensurePending() {
         if (!isPending()) {
-            throw new IllegalStateException(
-                    "Запрос на блокировку уже был обработан"
-            );
+            throw new CardBlockRequestAlreadyProcessedException(id);
         }
     }
 

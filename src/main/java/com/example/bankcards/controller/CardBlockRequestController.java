@@ -2,12 +2,15 @@ package com.example.bankcards.controller;
 
 import com.example.bankcards.dto.request.CreateCardBlockRequest;
 import com.example.bankcards.dto.request.ProcessCardBlockRequest;
+import com.example.bankcards.dto.response.ApiErrorResponse;
 import com.example.bankcards.dto.response.CardBlockRequestResponse;
 import com.example.bankcards.entity.enums.CardBlockRequestStatus;
 import com.example.bankcards.security.UserPrincipal;
 import com.example.bankcards.service.CardBlockRequestService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -39,10 +42,6 @@ public class CardBlockRequestController {
 
     private final CardBlockRequestService cardBlockRequestService;
 
-    // -------------------------------------------------------------------------
-    // Операции пользователя
-    // -------------------------------------------------------------------------
-
     @PostMapping("/cards/{cardId}/block-requests")
     @PreAuthorize("hasRole('USER')")
     @Operation(
@@ -55,34 +54,75 @@ public class CardBlockRequestController {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "201",
-                    description = "Заявка успешно создана"
+                    description = "Заявка успешно создана",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation =
+                                            CardBlockRequestResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Переданы некорректные данные"
+                    description = "Переданы некорректные данные",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "Пользователь не авторизован"
+                    description = "Пользователь не авторизован",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Карта принадлежит другому пользователю"
+                    description = """
+                            Карта принадлежит другому пользователю
+                            или у пользователя недостаточно прав
+                            """,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Карта не найдена"
+                    description = "Карта не найдена",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "409",
                     description = """
                             Карта уже заблокирована
                             или активная заявка уже существует
-                            """
+                            """,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             )
     })
     public ResponseEntity<CardBlockRequestResponse> createBlockRequest(
-            @AuthenticationPrincipal UserPrincipal principal,
+            @AuthenticationPrincipal
+            UserPrincipal principal,
 
             @Parameter(
                     description = "Идентификатор карты",
@@ -90,7 +130,9 @@ public class CardBlockRequestController {
             )
             @PathVariable Long cardId,
 
-            @Valid @RequestBody CreateCardBlockRequest request
+            @Valid
+            @RequestBody
+            CreateCardBlockRequest request
     ) {
         CardBlockRequestResponse response =
                 cardBlockRequestService.createBlockRequest(
@@ -103,10 +145,6 @@ public class CardBlockRequestController {
                 .status(HttpStatus.CREATED)
                 .body(response);
     }
-
-    // -------------------------------------------------------------------------
-    // Операции администратора
-    // -------------------------------------------------------------------------
 
     @GetMapping("/admin/block-requests")
     @PreAuthorize("hasRole('ADMIN')")
@@ -123,15 +161,38 @@ public class CardBlockRequestController {
                     description = "Страница заявок успешно получена"
             ),
             @ApiResponse(
+                    responseCode = "400",
+                    description = "Передано неизвестное значение статуса",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
+            ),
+            @ApiResponse(
                     responseCode = "401",
-                    description = "Пользователь не авторизован"
+                    description = "Пользователь не авторизован",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Недостаточно прав"
+                    description = "Недостаточно прав",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             )
     })
-    public ResponseEntity<PagedModel<CardBlockRequestResponse>> getAllBlockRequests(
+    public ResponseEntity<PagedModel<CardBlockRequestResponse>>
+    getAllBlockRequests(
             @Parameter(
                     description = "Статус заявки",
                     example = "PENDING"
@@ -139,7 +200,8 @@ public class CardBlockRequestController {
             @RequestParam(required = false)
             CardBlockRequestStatus status,
 
-            @ParameterObject Pageable pageable
+            @ParameterObject
+            Pageable pageable
     ) {
         Page<CardBlockRequestResponse> responsePage =
                 cardBlockRequestService.getAllBlockRequests(
@@ -156,7 +218,10 @@ public class CardBlockRequestController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             summary = "Получить заявку",
-            description = "Возвращает заявку на блокировку по идентификатору"
+            description = """
+                    Возвращает заявку на блокировку
+                    по её идентификатору.
+                    """
     )
     @ApiResponses({
             @ApiResponse(
@@ -164,15 +229,38 @@ public class CardBlockRequestController {
                     description = "Заявка успешно получена"
             ),
             @ApiResponse(
+                    responseCode = "401",
+                    description = "Пользователь не авторизован",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
+            ),
+            @ApiResponse(
                     responseCode = "403",
-                    description = "Недостаточно прав"
+                    description = "Недостаточно прав",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Заявка не найдена"
+                    description = "Заявка не найдена",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             )
     })
-    public ResponseEntity<CardBlockRequestResponse> getBlockRequestById(
+    public ResponseEntity<CardBlockRequestResponse>
+    getBlockRequestById(
             @Parameter(
                     description = "Идентификатор заявки",
                     example = "1"
@@ -191,33 +279,79 @@ public class CardBlockRequestController {
     @Operation(
             summary = "Подтвердить заявку",
             description = """
-                    Подтверждает заявку и блокирует связанную с ней карту.
+                    Подтверждает заявку и блокирует
+                    связанную с ней карту.
                     """
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Заявка подтверждена, карта заблокирована"
+                    description = """
+                            Заявка подтверждена,
+                            карта заблокирована
+                            """
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Переданы некорректные данные"
+                    description = "Переданы некорректные данные",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Пользователь не авторизован",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Недостаточно прав"
+                    description = "Недостаточно прав",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Заявка не найдена"
+                    description = """
+                            Заявка, карта или администратор
+                            не найдены
+                            """,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "Заявка уже была обработана"
+                    description = """
+                            Заявка уже была обработана
+                            или карта не может быть заблокирована
+                            """,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             )
     })
-    public ResponseEntity<CardBlockRequestResponse> approveBlockRequest(
-            @AuthenticationPrincipal UserPrincipal principal,
+    public ResponseEntity<CardBlockRequestResponse>
+    approveBlockRequest(
+            @AuthenticationPrincipal
+            UserPrincipal principal,
 
             @Parameter(
                     description = "Идентификатор заявки",
@@ -225,7 +359,9 @@ public class CardBlockRequestController {
             )
             @PathVariable Long requestId,
 
-            @Valid @RequestBody ProcessCardBlockRequest request
+            @Valid
+            @RequestBody
+            ProcessCardBlockRequest request
     ) {
         return ResponseEntity.ok(
                 cardBlockRequestService.approveBlockRequest(
@@ -252,23 +388,62 @@ public class CardBlockRequestController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Переданы некорректные данные"
+                    description = "Переданы некорректные данные",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Пользователь не авторизован",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Недостаточно прав"
+                    description = "Недостаточно прав",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "Заявка не найдена"
+                    description = """
+                            Заявка или администратор
+                            не найдены
+                            """,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "Заявка уже была обработана"
+                    description = "Заявка уже была обработана",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ApiErrorResponse.class
+                            )
+                    )
             )
     })
-    public ResponseEntity<CardBlockRequestResponse> rejectBlockRequest(
-            @AuthenticationPrincipal UserPrincipal principal,
+    public ResponseEntity<CardBlockRequestResponse>
+    rejectBlockRequest(
+            @AuthenticationPrincipal
+            UserPrincipal principal,
 
             @Parameter(
                     description = "Идентификатор заявки",
@@ -276,7 +451,9 @@ public class CardBlockRequestController {
             )
             @PathVariable Long requestId,
 
-            @Valid @RequestBody ProcessCardBlockRequest request
+            @Valid
+            @RequestBody
+            ProcessCardBlockRequest request
     ) {
         return ResponseEntity.ok(
                 cardBlockRequestService.rejectBlockRequest(

@@ -4,6 +4,7 @@ import com.example.bankcards.dto.request.TransferRequest;
 import com.example.bankcards.dto.response.TransferResponse;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.enums.CardStatus;
+import com.example.bankcards.exception.CardExpiredException;
 import com.example.bankcards.exception.CardAccessDeniedException;
 import com.example.bankcards.exception.CardBlockedException;
 import com.example.bankcards.exception.InsufficientFundsException;
@@ -86,12 +87,10 @@ public class TransferService {
         }
 
         if (card.getStatus() == CardStatus.EXPIRED
-                || card.getExpirationDate().isBefore(LocalDate.now())) {
-            throw new IllegalStateException(
-                    "Срок действия карты с идентификатором "
-                            + card.getId()
-                            + " истёк"
-            );
+                || card.getExpirationDate()
+                .isBefore(LocalDate.now())) {
+
+            throw new CardExpiredException(card.getId());
         }
     }
 }

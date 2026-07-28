@@ -1,6 +1,10 @@
 package com.example.bankcards.entity;
 
 import com.example.bankcards.entity.enums.CardStatus;
+import com.example.bankcards.exception.CardAlreadyActiveException;
+import com.example.bankcards.exception.CardAlreadyBlockedException;
+import com.example.bankcards.exception.CardExpiredException;
+import com.example.bankcards.exception.InsufficientFundsException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -111,13 +115,11 @@ public class Card {
 
     public void block() {
         if (status == CardStatus.BLOCKED) {
-            throw new IllegalStateException("Карта уже заблокирована");
+            throw new CardAlreadyBlockedException(id);
         }
 
         if (status == CardStatus.EXPIRED) {
-            throw new IllegalStateException(
-                    "Нельзя заблокировать просроченную карту"
-            );
+            throw new CardExpiredException(id);
         }
 
         status = CardStatus.BLOCKED;
@@ -125,13 +127,11 @@ public class Card {
 
     public void activate() {
         if (status == CardStatus.ACTIVE) {
-            throw new IllegalStateException("Карта уже активна");
+            throw new CardAlreadyActiveException(id);
         }
 
         if (status == CardStatus.EXPIRED) {
-            throw new IllegalStateException(
-                    "Нельзя активировать просроченную карту"
-            );
+            throw new CardExpiredException(id);
         }
 
         status = CardStatus.ACTIVE;
@@ -150,9 +150,7 @@ public class Card {
         validatePositiveAmount(amount);
 
         if (balance.compareTo(amount) < 0) {
-            throw new IllegalStateException(
-                    "Недостаточно средств на карте"
-            );
+            throw new InsufficientFundsException(id);
         }
 
         balance = balance.subtract(amount);

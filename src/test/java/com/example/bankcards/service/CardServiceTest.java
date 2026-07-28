@@ -296,9 +296,10 @@ class CardServiceTest {
     }
 
     @Test
-    void getUserCards_shouldReturnOnlyUserCards() {
+    void getUserCards_shouldReturnUserCards_whenFiltersAreMissing() {
         // Arrange
-        Pageable pageable = PageRequest.of(0, 10);
+        Pageable pageable =
+                PageRequest.of(0, 10);
 
         User user = mock(User.class);
         Card card = mock(Card.class);
@@ -321,34 +322,131 @@ class CardServiceTest {
                 MASKED_NUMBER
         );
 
-        Page<Card> cards = new PageImpl<>(
-                List.of(card),
-                pageable,
-                1
-        );
+        Page<Card> cards =
+                new PageImpl<>(
+                        List.of(card),
+                        pageable,
+                        1
+                );
 
-        when(cardRepository.findAllByUser_Id(USER_ID, pageable))
-                .thenReturn(cards);
-
-        CardResponse expectedResponse = new CardResponse(
-                CARD_ID,
+        when(cardRepository.findAllByUser_Id(
                 USER_ID,
-                MASKED_NUMBER,
-                expirationDate,
-                CardStatus.ACTIVE,
-                balance
-        );
+                pageable
+        )).thenReturn(cards);
 
         // Act
         Page<CardResponse> result =
-                cardService.getUserCards(USER_ID, pageable);
+                cardService.getUserCards(
+                        USER_ID,
+                        null,
+                        null,
+                        pageable
+                );
 
         // Assert
         assertEquals(1, result.getTotalElements());
-        assertEquals(expectedResponse, result.getContent().get(0));
+        assertEquals(
+                CARD_ID,
+                result.getContent().get(0).id()
+        );
+        assertEquals(
+                MASKED_NUMBER,
+                result.getContent().get(0).maskedNumber()
+        );
+
+        verify(cardRepository).findAllByUser_Id(
+                USER_ID,
+                pageable
+        );
+
+        verify(cardRepository, never())
+                .findAllByUser_IdAndNumberLastFour(
+                        anyLong(),
+                        anyString(),
+                        any(Pageable.class)
+                );
+
+        verify(cardRepository, never())
+                .findAllByUser_IdAndStatus(
+                        anyLong(),
+                        any(CardStatus.class),
+                        any(Pageable.class)
+                );
+
+        verify(cardRepository, never())
+                .findAllByUser_IdAndNumberLastFourAndStatus(
+                        anyLong(),
+                        anyString(),
+                        any(CardStatus.class),
+                        any(Pageable.class)
+                );
+    }
+
+    @Test
+    void getUserCards_shouldSearchByLastFour() {
+        // Arrange
+        Pageable pageable =
+                PageRequest.of(0, 10);
+
+        User user = mock(User.class);
+        Card card = mock(Card.class);
+
+        LocalDate expirationDate =
+                LocalDate.now().plusYears(3);
+
+        BigDecimal balance =
+                new BigDecimal("500.00");
+
+        stubCardForResponse(
+                card,
+                user,
+                CARD_ID,
+                USER_ID,
+                LAST_FOUR,
+                expirationDate,
+                CardStatus.ACTIVE,
+                balance,
+                MASKED_NUMBER
+        );
+
+        Page<Card> cards =
+                new PageImpl<>(
+                        List.of(card),
+                        pageable,
+                        1
+                );
+
+        when(
+                cardRepository
+                        .findAllByUser_IdAndNumberLastFour(
+                                USER_ID,
+                                LAST_FOUR,
+                                pageable
+                        )
+        ).thenReturn(cards);
+
+        // Act
+        Page<CardResponse> result =
+                cardService.getUserCards(
+                        USER_ID,
+                        " 3456 ",
+                        null,
+                        pageable
+                );
+
+        // Assert
+        assertEquals(1, result.getTotalElements());
+        assertEquals(
+                MASKED_NUMBER,
+                result.getContent().get(0).maskedNumber()
+        );
 
         verify(cardRepository)
-                .findAllByUser_Id(USER_ID, pageable);
+                .findAllByUser_IdAndNumberLastFour(
+                        USER_ID,
+                        LAST_FOUR,
+                        pageable
+                );
     }
 
     @Test
@@ -396,6 +494,170 @@ class CardServiceTest {
 
         verify(cardRepository).findById(CARD_ID);
         verify(cardNumberMasker).mask(LAST_FOUR);
+    }
+
+    @Test
+    void getUserCards_shouldFilterByStatus() {
+        // Arrange
+        Pageable pageable =
+                PageRequest.of(0, 10);
+
+        User user = mock(User.class);
+        Card card = mock(Card.class);
+
+        LocalDate expirationDate =
+                LocalDate.now().plusYears(3);
+
+        BigDecimal balance =
+                new BigDecimal("500.00");
+
+        stubCardForResponse(
+                card,
+                user,
+                CARD_ID,
+                USER_ID,
+                LAST_FOUR,
+                expirationDate,
+                CardStatus.ACTIVE,
+                balance,
+                MASKED_NUMBER
+        );
+
+        Page<Card> cards =
+                new PageImpl<>(
+                        List.of(card),
+                        pageable,
+                        1
+                );
+
+        when(
+                cardRepository.findAllByUser_IdAndStatus(
+                        USER_ID,
+                        CardStatus.ACTIVE,
+                        pageable
+                )
+        ).thenReturn(cards);
+
+        // Act
+        Page<CardResponse> result =
+                cardService.getUserCards(
+                        USER_ID,
+                        null,
+                        CardStatus.ACTIVE,
+                        pageable
+                );
+
+        // Assert
+        assertEquals(1, result.getTotalElements());
+        assertEquals(
+                CardStatus.ACTIVE,
+                result.getContent().get(0).status()
+        );
+
+        verify(cardRepository)
+                .findAllByUser_IdAndStatus(
+                        USER_ID,
+                        CardStatus.ACTIVE,
+                        pageable
+                );
+    }
+
+    @Test
+    void getUserCards_shouldSearchByLastFourAndFilterByStatus() {
+        // Arrange
+        Pageable pageable =
+                PageRequest.of(0, 10);
+
+        User user = mock(User.class);
+        Card card = mock(Card.class);
+
+        LocalDate expirationDate =
+                LocalDate.now().plusYears(3);
+
+        BigDecimal balance =
+                new BigDecimal("500.00");
+
+        stubCardForResponse(
+                card,
+                user,
+                CARD_ID,
+                USER_ID,
+                LAST_FOUR,
+                expirationDate,
+                CardStatus.ACTIVE,
+                balance,
+                MASKED_NUMBER
+        );
+
+        Page<Card> cards =
+                new PageImpl<>(
+                        List.of(card),
+                        pageable,
+                        1
+                );
+
+        when(
+                cardRepository
+                        .findAllByUser_IdAndNumberLastFourAndStatus(
+                                USER_ID,
+                                LAST_FOUR,
+                                CardStatus.ACTIVE,
+                                pageable
+                        )
+        ).thenReturn(cards);
+
+        // Act
+        Page<CardResponse> result =
+                cardService.getUserCards(
+                        USER_ID,
+                        LAST_FOUR,
+                        CardStatus.ACTIVE,
+                        pageable
+                );
+
+        // Assert
+        assertEquals(1, result.getTotalElements());
+        assertEquals(
+                MASKED_NUMBER,
+                result.getContent().get(0).maskedNumber()
+        );
+        assertEquals(
+                CardStatus.ACTIVE,
+                result.getContent().get(0).status()
+        );
+
+        verify(cardRepository)
+                .findAllByUser_IdAndNumberLastFourAndStatus(
+                        USER_ID,
+                        LAST_FOUR,
+                        CardStatus.ACTIVE,
+                        pageable
+                );
+    }
+
+    @Test
+    void getUserCards_shouldThrowException_whenLastFourIsInvalid() {
+        Pageable pageable =
+                PageRequest.of(0, 10);
+
+        IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> cardService.getUserCards(
+                                USER_ID,
+                                "12ab",
+                                null,
+                                pageable
+                        )
+                );
+
+        assertEquals(
+                "Последние четыре цифры карты должны "
+                        + "состоять ровно из 4 цифр",
+                exception.getMessage()
+        );
+
+        verifyNoInteractions(cardRepository);
     }
 
     @Test
