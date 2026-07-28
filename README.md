@@ -87,13 +87,13 @@ HTTP request
 Controller
     |
     v
-Service
+ Service
     |
     v
 Repository
     |
     v
-MySQL
+  MySQL
 ```
 
 Дополнительные компоненты отвечают за безопасность, обработку ошибок, валидацию, генерацию и защиту номеров карт.
